@@ -37,6 +37,26 @@ export default {
       }
     });
   },
+  checkItem: (req:Request, res:Response, next:NextFunction) => {
+    Item.findById(req.params.id).exec(async (err, foundItem) => {
+      if (err || !foundItem) {
+        console.log(err);
+        req.flash('error', 'Sorry, that course does not exist!');
+        res.status(500).send('/item');
+      } else if (foundItem.buyer === req.user._id) {
+        if (!req.body.accept){ 
+          req.item = await foundItem.populate('chats').execPopulate();
+          next();
+        } else {
+          req.item = foundItem;
+          next();
+        }
+      } else {
+        req.flash('error', "You don't have permission to do that!");
+        res.status(500).send('/item/' + req.params.id);
+      }
+    });
+  },
   isAdmin: (req:Request, res:Response, next:NextFunction) => {
     if (req.user && req.user.isAdmin) {
       next();

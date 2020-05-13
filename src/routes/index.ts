@@ -24,7 +24,7 @@ router.post("/register", middleware.checkRegister, async (req:express.Request, r
   if (req.body.adminCode === process.env.ADMIN_CODE) {
     newUser.isAdmin = true;
   }
-  let user = await User.register(newUser, req.body.password);
+  await User.register(newUser, req.body.password);
   res.send('/register');
 });
 
@@ -49,10 +49,10 @@ router.get('/follow/:slug', middleware.isLoggedIn, async (req:express.Request, r
   try {
     console.log(req.user);
     let user = await User.findById(req.user._id).exec();
-    await user.folCategory.push(req.params.slug);
+    user.folCategory.push(req.params.slug);
     await user.save();
     req.login(user,() => {});
-    req.flash('success', 'Successfully followed ' + req.params.slug + '!');
+    req.flash('success', 'Successfully followed ' + req.params.id + '!');
     res.redirect('/users/' + req.user._id);
   } catch (err) {
     req.flash('error', err.message);
@@ -79,7 +79,7 @@ router.get("/report", middleware.isAdmin, async (req:express.Request, res:expres
   try {
     const items = await Item.find({ isReported: true }).exec();
     const reviews = await Review.find({ isReported: true }).exec();
-    res.render("report", { items, reviews });
+    res.json({ items, reviews });
   } catch (err) {
     console.log(err);
     req.flash('error', err.message);

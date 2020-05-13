@@ -10,7 +10,7 @@ router.get("/", (req:express.Request, res:express.Response) => {
     User.findById(req.params.id).populate({
         path: "reviews",
         options: { sort: { createdAt: -1 } } // sorting the populated reviews array to show the latest first
-    }).exec(function (err, user) {
+    }).exec((err, user) => {
         if (err || !user) {
             req.flash("error", err.message);
             return res.redirect("back");
@@ -30,9 +30,9 @@ router.post("/", middleware.isLoggedIn, middleware.checkUserReviewExistence, asy
         review.user = user;
         //save review
         await review.save();
-        await user.reviews.push(review);
+        user.reviews.push(review);
         // calculate the new average review for the course
-        user.rating = await calculateAverage(user.reviews);
+        user.rating = calculateAverage(user.reviews);
         //save course
         let newNotification = {
             username: req.user.username,
@@ -40,7 +40,7 @@ router.post("/", middleware.isLoggedIn, middleware.checkUserReviewExistence, asy
             message: "created a new review"
         }
         let notification = await Notification.create(newNotification);
-        await user.notifs.push(notification);
+        user.notifs.push(notification);
         await user.save();
         req.flash("success", "Your review has been successfully added.");
         res.send('/users/' + req.params.id);
@@ -65,7 +65,7 @@ const calculateAverage = (reviews:IReview[]) => {
 
 // Reviews Update
 router.put("/:review_id", middleware.isLoggedIn, middleware.checkReviewOwnership, async (req:express.Request, res:express.Response) => {
-    let updatedReview = await Review.findByIdAndUpdate(req.params.review_id, req.body.review, { new: true }).exec();
+    await Review.findByIdAndUpdate(req.params.review_id, req.body.review, { new: true }).exec();
     let user = await User.findById(req.params.id).exec();
     // recalculate course average
     user.rating = calculateAverage(user.reviews);
@@ -76,7 +76,7 @@ router.put("/:review_id", middleware.isLoggedIn, middleware.checkReviewOwnership
         message: "updated a review"
     }
     let notification = await Notification.create(newNotification);
-    await user.notifs.push(notification);
+    user.notifs.push(notification);
     await user.save();
     req.flash("success", "Your review was successfully edited.");
     res.send('/users/' + user.id);
@@ -95,7 +95,7 @@ router.delete("/:review_id", middleware.isAdmin, async (req:express.Request, res
         message: "deleted a review"
     }
     let notification = await Notification.create(newNotification);
-    await user.notifs.push(notification);
+    user.notifs.push(notification);
     await user.save();
     req.flash("success", "Your review was deleted successfully.");
     res.send("/users/" + req.params.id);
@@ -133,17 +133,17 @@ router.put("/:review_id/upvote", middleware.isLoggedIn, async (req:express.Reque
     try {
         let review = await Review.findById(req.params.review_id).exec();
         if (review.upvoted(req.user.id)) {
-            await review.unvote(req.user.id)
+            review.unvote(req.user.id)
             await review.save();
             res.status(200).send();
         } else if (review.downvoted(req.user.id)) {
-            await review.unvote(req.user.id)
+            review.unvote(req.user.id)
             await review.save();
-            await review.upvote(req.user.id)
+            review.upvote(req.user.id)
             await review.save();
             res.status(200).send();
         } else {
-            await review.upvote(req.user.id);
+            review.upvote(req.user.id);
             await review.save();
             res.status(200).send();
         }
@@ -157,17 +157,17 @@ router.put("/:review_id/downvote", middleware.isLoggedIn, async (req:express.Req
     try {
         let review = await Review.findById(req.params.review_id).exec();
         if (review.downvoted(req.user.id)) {
-            await review.unvote(req.user.id)
+            review.unvote(req.user.id)
             await review.save()
             res.status(200).send();
         } else if (review.upvoted(req.user.id)) {
-            await review.unvote(req.user.id)
+            review.unvote(req.user.id)
             await review.save();
-            await review.downvote(req.user.id);
+            review.downvote(req.user.id);
             await review.save()
             res.status(200).send();
         } else {
-            await review.downvote(req.user.id);
+            review.downvote(req.user.id);
             await review.save()
             res.status(200).send();
         }

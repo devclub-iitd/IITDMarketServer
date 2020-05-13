@@ -113,14 +113,13 @@ router.post("/", middleware.isLoggedIn, async (req:express.Request, res:express.
   let item = await Item.create(newItem);
   let users = await User.find({ folCategory: item.category }).exec();
   let newNotification = {
-    username: req.user.username,
-    targetSlug: '',
-    message: "created a new course"
+    targetItem: item,
+    message: "Another item came for you in which u may be interested"
   }
   // Socket !!
   for (let follower of users) {
     let notification = await Notification.create(newNotification);
-    await follower.notifs.push(notification);
+    follower.notifs.push(notification);
     follower.save();
   }
   res.send('Done');
@@ -167,20 +166,19 @@ router.put("/:id", middleware.isLoggedIn, middleware.checkUserItem, async (req:e
   await req.item.save();
   let users = await User.find({ folCategory: req.item.category }).exec();
   let newNotification = {
-    username: req.user.username,
-    targetSlug: '',
-    message: "created a new course"
+    targetItem: req.item,
+    message: "updated an item"
   }
   // Socket !!
   for (let follower of users) {
     let notification = await Notification.create(newNotification);
-    await follower.notifs.push(notification);
+    follower.notifs.push(notification);
     follower.save();
   }
   for (let notifusers of req.item.chats) {
     let notification = await Notification.create(newNotification);
     let userx = await User.findById(notifusers.user2).exec();
-    await userx.notifs.push(notification);
+    userx.notifs.push(notification);
     await userx.save();
   }
   res.send('Done');
@@ -189,19 +187,85 @@ router.put("/:id", middleware.isLoggedIn, middleware.checkUserItem, async (req:e
 // DELETE - removes course and its comments from the database
 router.delete("/:id", middleware.isLoggedIn, middleware.checkUserItem, async (req:express.Request, res:express.Response) => {
   let newNotification = {
-    targetUser: req.user.id,
-    targetId: req.item._id,
+    targetItem: req.item,
     message: "deleted an item"
   }
   for (let notifusers of req.item.chats) {
     let notification = await Notification.create(newNotification);
     let userx = await User.findById(notifusers.user2).exec();
-    await userx.notifs.push(notification);
+    userx.notifs.push(notification);
     await userx.save();
     Chat.findOneAndRemove({ _id: notifusers.id })
   }
   await req.item.remove();
   res.status(206).send('Deleted');
 })
+
+router.post('/:id/sellIni', middleware.isLoggedIn, middleware.checkUserItem, async (req:express.Request, res:express.Response) => {
+  let user = await User.findOne({$or: [{_id: req.body.id}, {email: req.body.email}]}).exec()
+  if (!user) {
+    req.flash('error', 'No user found')
+    res.send(300)
+  } else {
+    req.item.buyer = user
+    req.item.buy_date = new Date(Date.now())
+    req.item.status = 'INPROCESS'
+    for (let chat of req.item.chats) {
+      chat.active = false
+      chat.save()
+    }
+    let newNotification = {
+      targetItem: req.item,
+      message: "deleted an item"
+    }
+    let notification = await Notification.create(newNotification)
+    user.notifs.push(notification)
+    await user.save()
+    await req.item.save()
+    req.flash('success','jhgd')
+    res.send('done')
+  }
+})
+
+router.post(':id/sellFin', middleware.isLoggedIn, middleware.checkItem, async (req:express.Request, res:express.Response) => {
+  if (req.body.accept) {
+    req.item.status = 'SOLD'
+    await req.item.save()
+    res.send('Done')
+  } else {
+    req.item.status = 'UNSOLD'
+    req.item.buy_date = undefined
+    req.item.buyer = undefined
+    for (let chat of req.item.chats) {
+      chat.active = true
+      chat.save()
+    }
+    let newNotification = {
+      targetItem: req.item,
+      message: "deleted an item"
+    }
+    let notification = await Notification.create(newNotification)
+    req.item.seller.notifs.push(notification)
+    await req.item.seller.save()
+    await req.item.save()
+    req.flash('success','jhgd')
+    res.send('done')
+  }
+})
+
+router.put("/id/report", middleware.isLoggedIn, async (req:express.Request, res:express.Response) => {
+  try {
+      let item = await Item.findById(req.params.id).exec();
+      item.isReported = true;
+      await item.save();
+      req.flash('success', 'Item reported!');
+      res.send("/item/" + req.params.id);
+  } catch (err) {
+      console.log(err);
+      req.flash('error', err.message);
+      return res.redirect('/');
+  }
+})
+
 
 export default router;
