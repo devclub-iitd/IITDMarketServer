@@ -4,6 +4,8 @@ import middleware from '../middleware/index'
 import Item from '../models/item'
 import Chat from '../models/chat'
 import User from '../models/user'
+import Server from 'socket.io'
+
 
 router.post('/new', middleware.isLoggedIn, async (req:express.Request, res:express.Response) => {
     let item = await Item.findById(req.params.id).exec();
