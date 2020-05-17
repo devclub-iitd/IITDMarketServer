@@ -1,92 +1,94 @@
-import mongoose from "mongoose";
-import { IUser } from "./user";
-import { IChat } from "./chat";
+import mongoose from 'mongoose';
+import {mUser} from './user';
+import {mChat} from './chat';
 
-export interface IItem extends mongoose.Document {
-   title: String,
-   image: String[]
-   description: String,
-   price: Number,
-   seller: IUser,
-   buyer: IUser,
-   chats: IChat[],
-   category: String,
-   tag: String,
-   buy_date: Date,
-   ApproxTime: {
-      month: Number
-      year: Number,
-   },
-   status: String,
-   isReported: Boolean,
-   userIsAnonymous: Boolean
+export interface mItem extends mongoose.Document {
+  title: string;
+  image: string[];
+  description: string;
+  price: number;
+  seller: mUser;
+  buyer: mUser;
+  chats: mChat[];
+  category: string;
+  tag: string;
+  buy_date: Date;
+  ApproxTime: {
+    month: number;
+    year: number;
+  };
+  status: string;
+  isReported: boolean;
+  userIsAnonymous: boolean;
 }
 
-var itemSchema = new mongoose.Schema({
-   title: {
+var itemSchema = new mongoose.Schema(
+  {
+    title: {
       type: String,
-      required: "Course title cannot be blank"
-   },
-   image: [
+      required: 'Course title cannot be blank',
+    },
+    image: [
       {
-         type: String
-      }
-   ],
-   description: String,
-   price: {
+        type: String,
+      },
+    ],
+    description: String,
+    price: {
       type: Number,
       min: 0,
       validate: {
-         validator: Number.isInteger,
-         message: "{VALUE} is not an integer value."
-      }
-   },
-   seller: {
+        validator: Number.isInteger,
+        message: '{VALUE} is not an integer value.',
+      },
+    },
+    seller: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-   },
-   buyer: {
+      ref: 'User',
+    },
+    buyer: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-   },
-   chats: [
+      ref: 'User',
+    },
+    chats: [
       {
-         type: mongoose.Schema.Types.ObjectId,
-         ref: 'Chat',
-      }
-   ],
-   category: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Chat',
+      },
+    ],
+    category: {
       type: String,
-      enum: ["GENERAL", "COOLER", "LAPTOP", "CYCLE", "MATTRESS",],
+      enum: ['GENERAL', 'COOLER', 'LAPTOP', 'CYCLE', 'MATTRESS'],
       trim: true,
-      default: "GENERAL",
-   },
-   tag: String,
-   buy_date: Date,
-   ApproxTime: {
+      default: 'GENERAL',
+    },
+    tag: String,
+    buy_date: Date,
+    ApproxTime: {
       month: {
-         type: Number,
-         min: 1,
-         max: 12,
+        type: Number,
+        min: 1,
+        max: 12,
       },
       year: Number,
-   },
-   status: {
+    },
+    status: {
       type: String,
-      enum: ["UNSOLD", "INPROCESS", "SOLD"],
-      default: 'UNSOLD'
-   },
-   isReported: {
+      enum: ['UNSOLD', 'INPROCESS', 'SOLD'],
+      default: 'UNSOLD',
+    },
+    isReported: {
       type: Boolean,
       default: false,
-   },
-   userIsAnonymous: {
+    },
+    userIsAnonymous: {
       type: Boolean,
       default: false,
-   }
-},
-   {
-      timestamps: true
-   });
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
 
-export default mongoose.model<IItem>("Item", itemSchema);
+export default mongoose.model<mItem>('Item', itemSchema);

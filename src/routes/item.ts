@@ -35,18 +35,18 @@ const escapeRegex = (text: string) =>
 // INDEX - show all courses
 router.get('/', async (req: express.Request, res: express.Response) => {
   try {
-    const perPage: number = 8;
+    const perPage = 8;
     const pageQuery = parseInt(`${req.query.page}`);
     const pageNumber: number = pageQuery ? pageQuery : 1;
     let noMatch = null;
     if (req.query.search) {
       const regex = new RegExp(escapeRegex(`${req.query.search}`), 'gi');
-      let allItems = await Item.find({title: `${regex}`})
+      const allItems = await Item.find({title: `${regex}`})
         .sort({createdAt: -1})
         .skip(perPage * pageNumber - perPage)
         .limit(perPage)
         .exec();
-      let count = await Item.count({title: `${regex}`}).exec();
+      const count = await Item.count({title: `${regex}`}).exec();
       if (allItems.length < 1) {
         noMatch = 'No items match that query, please try again.';
       }
@@ -59,12 +59,12 @@ router.get('/', async (req: express.Request, res: express.Response) => {
       });
     } else {
       // get all campgrounds from DB
-      let allItems = await Item.find({})
+      const allItems = await Item.find({})
         .sort({createdAt: -1})
         .skip(perPage * pageNumber - perPage)
         .limit(perPage)
         .exec();
-      let count = await Item.countDocuments().exec();
+      const count = await Item.countDocuments().exec();
       res.json({
         items: allItems,
         current: pageNumber,
@@ -78,51 +78,60 @@ router.get('/', async (req: express.Request, res: express.Response) => {
   }
 });
 
-// INDEX - show all items by category 
-router.get('/:category', async (req: express.Request, res: express.Response) => {
-  try {
-    const perPage: number = 8;
-    const pageQuery = parseInt(`${req.query.page}`);
-    const pageNumber: number = pageQuery ? pageQuery : 1;
-    let noMatch = null;
-    if (req.query.search) {
-      const regex = new RegExp(escapeRegex(`${req.query.search}`), 'gi');
-      let allItems = await Item.find({$and: [{title: `${regex}`},{category: req.params.category}]})
-        .sort({createdAt: -1})
-        .skip(perPage * pageNumber - perPage)
-        .limit(perPage)
-        .exec();
-      let count = await Item.count({title: `${regex}`}).exec();
-      if (allItems.length < 1) {
-        noMatch = 'No items match that query, please try again.';
+// INDEX - show all items by category
+router.get(
+  '/:category',
+  async (req: express.Request, res: express.Response) => {
+    try {
+      const perPage = 8;
+      const pageQuery = parseInt(`${req.query.page}`);
+      const pageNumber: number = pageQuery ? pageQuery : 1;
+      let noMatch = null;
+      if (req.query.search) {
+        const regex = new RegExp(escapeRegex(`${req.query.search}`), 'gi');
+        const allItems = await Item.find({
+          $and: [{title: `${regex}`}, {category: req.params.category}],
+        })
+          .sort({createdAt: -1})
+          .skip(perPage * pageNumber - perPage)
+          .limit(perPage)
+          .exec();
+        const count = await Item.count({
+          $and: [{title: `${regex}`}, {category: req.params.category}],
+        }).exec();
+        if (allItems.length < 1) {
+          noMatch = 'No items match that query, please try again.';
+        }
+        res.json({
+          items: allItems,
+          current: pageNumber,
+          pages: Math.ceil(count / perPage),
+          noMatch: noMatch,
+          search: req.query.search,
+        });
+      } else {
+        // get all campgrounds from DB
+        const allItems = await Item.find({category: req.params.category})
+          .sort({createdAt: -1})
+          .skip(perPage * pageNumber - perPage)
+          .limit(perPage)
+          .exec();
+        const count = await Item.countDocuments({
+          category: req.params.category,
+        }).exec();
+        res.json({
+          items: allItems,
+          current: pageNumber,
+          pages: Math.ceil(count / perPage),
+          noMatch: noMatch,
+          search: false,
+        });
       }
-      res.json({
-        items: allItems,
-        current: pageNumber,
-        pages: Math.ceil(count / perPage),
-        noMatch: noMatch,
-        search: req.query.search,
-      });
-    } else {
-      // get all campgrounds from DB
-      let allItems = await Item.find({category: req.params.category})
-        .sort({createdAt: -1})
-        .skip(perPage * pageNumber - perPage)
-        .limit(perPage)
-        .exec();
-      let count = await Item.countDocuments().exec();
-      res.json({
-        items: allItems,
-        current: pageNumber,
-        pages: Math.ceil(count / perPage),
-        noMatch: noMatch,
-        search: false,
-      });
+    } catch (err) {
+      res.status(500).send(err.message);
     }
-  } catch (err) {
-    res.status(500).send(err.message);
   }
-});
+);
 
 // //INDEX - show all courses
 // router.get("/", function(req, res){
@@ -159,7 +168,7 @@ router.post(
   async (req: express.Request, res: express.Response) => {
     try {
       // get data from form and add to courses array
-      var newItem = {
+      const newItem: Record<string, any> = {
         title: req.body.title,
         image: req.body.image,
         description: req.body.description,
@@ -173,16 +182,16 @@ router.post(
           year: req.body.year,
         },
       };
-      let item = await Item.create(newItem);
-      let users = await User.find({folCategory: item.category}).exec();
-      let newNotification = {
+      const item = await Item.create(newItem);
+      const users = await User.find({folCategory: item.category}).exec();
+      const newNotification = {
         target: item._id,
         message: 'Another item came for you in which u may be interested',
-        isItem: true
+        isItem: true,
       };
       // Socket !!
-      for (let follower of users) {
-        let notification = await Notification.create(newNotification);
+      for (const follower of users) {
+        const notification = await Notification.create(newNotification);
         follower.notifs.push(notification);
         follower.save();
       }
@@ -226,7 +235,7 @@ router.put(
   middleware.checkUserItem,
   async (req: express.Request, res: express.Response) => {
     try {
-      let nn: boolean = false;
+      let nn = false;
       if (req.body.category !== req.item.category) {
         nn = true;
       }
@@ -243,21 +252,21 @@ router.put(
         year: req.body.year,
       };
       await req.item.save();
-      let users = await User.find({folCategory: req.item.category}).exec();
-      let newNotification = {
+      const users = await User.find({folCategory: req.item.category}).exec();
+      const newNotification = {
         target: req.item._id,
         message: 'updated an item',
-        isItem: true
+        isItem: true,
       };
       // Socket !!
-      for (let follower of users) {
-        let notification = await Notification.create(newNotification);
+      for (const follower of users) {
+        const notification = await Notification.create(newNotification);
         follower.notifs.push(notification);
         follower.save();
       }
-      for (let notifusers of req.item.chats) {
-        let notification = await Notification.create(newNotification);
-        let userx = await User.findById(notifusers.user2).exec();
+      for (const notifusers of req.item.chats) {
+        const notification = await Notification.create(newNotification);
+        const userx = await User.findById(notifusers.user2).exec();
         userx.notifs.push(notification);
         await userx.save();
       }
@@ -275,14 +284,14 @@ router.delete(
   middleware.checkUserItem,
   async (req: express.Request, res: express.Response) => {
     try {
-      let newNotification = {
+      const newNotification = {
         target: req.item._id,
         message: 'deleted an item',
-        isItem: true
+        isItem: true,
       };
-      for (let notifusers of req.item.chats) {
-        let notification = await Notification.create(newNotification);
-        let userx = await User.findById(notifusers.user2).exec();
+      for (const notifusers of req.item.chats) {
+        const notification = await Notification.create(newNotification);
+        const userx = await User.findById(notifusers.user2).exec();
         userx.notifs.push(notification);
         await userx.save();
         Chat.findOneAndRemove({_id: notifusers.id});
@@ -301,7 +310,7 @@ router.post(
   middleware.checkUserItem,
   async (req: express.Request, res: express.Response) => {
     try {
-      let user = await User.findOne({
+      const user = await User.findOne({
         $or: [{_id: req.body.id}, {email: req.body.email}],
       }).exec();
       if (!user) {
@@ -311,16 +320,16 @@ router.post(
         req.item.buyer = user;
         req.item.buy_date = new Date(Date.now());
         req.item.status = 'INPROCESS';
-        for (let chat of req.item.chats) {
+        for (const chat of req.item.chats) {
           chat.active = false;
           chat.save();
         }
-        let newNotification = {
+        const newNotification = {
           target: req.item._id,
           message: 'deleted an item',
-          isItem: true
+          isItem: true,
         };
-        let notification = await Notification.create(newNotification);
+        const notification = await Notification.create(newNotification);
         user.notifs.push(notification);
         await user.save();
         await req.item.save();
@@ -351,12 +360,12 @@ router.post(
           chat.active = true;
           chat.save();
         }
-        let newNotification = {
+        const newNotification = {
           target: req.item._id,
           message: 'deleted an item',
-          isItem: true
+          isItem: true,
         };
-        let notification = await Notification.create(newNotification);
+        const notification = await Notification.create(newNotification);
         req.item.seller.notifs.push(notification);
         await req.item.seller.save();
         await req.item.save();
@@ -374,7 +383,7 @@ router.put(
   middleware.isLoggedIn,
   async (req: express.Request, res: express.Response) => {
     try {
-      let item = await Item.findById(req.params.id).exec();
+      const item = await Item.findById(req.params.id).exec();
       item.isReported = true;
       await item.save();
       req.flash('success', 'Item reported!');

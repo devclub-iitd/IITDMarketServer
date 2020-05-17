@@ -1,44 +1,46 @@
-import mongoose from "mongoose";
-import {IUser} from './user'
-import {IItem} from './item'
+import mongoose from 'mongoose';
+import {mUser} from './user';
+import {mItem} from './item';
 
-export interface IChat extends mongoose.Document {
-    user1: IUser;
-    user2: IUser;
-    item: IItem;
-    messages: String[];
-    active: Boolean;
+export interface mChat extends mongoose.Document {
+  user1: mUser;
+  user2: mUser;
+  item: mItem;
+  messages: string[];
+  active: boolean;
 }
 
-const chatSchema = new mongoose.Schema({
+const chatSchema = new mongoose.Schema(
+  {
     user1: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User"
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
     },
     user2: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User"
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
     },
     item: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Item"
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Item',
     },
     messages: [
-        {
-            type: String
-        }
+      {
+        type: String,
+      },
     ],
     active: {
-        type: Boolean,
-        default: true
-    }
-}, {
-    timestamps: true
-})
+      type: Boolean,
+      default: true,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
 
 // const ArrLen = (val) => val.length === 2
 
 // chatSchema.path('users').validate(ArrLen, '{PATH} exceeds length');
 
-
-export default mongoose.model<IChat>('Chat', chatSchema);
+export default mongoose.model<mChat>('Chat', chatSchema);

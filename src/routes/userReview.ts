@@ -1,6 +1,6 @@
 import express from 'express';
 const router = express.Router({mergeParams: true});
-import Review, {IReview} from '../models/review';
+import Review, {mReview} from '../models/review';
 import User from '../models/user';
 import Notification from '../models/notification';
 import middleware from '../middleware';
@@ -29,11 +29,11 @@ router.post(
   async (req: express.Request, res: express.Response) => {
     try {
       //lookup course using ID
-      let user = await User.findById(req.params.id)
+      const user = await User.findById(req.params.id)
         .populate('reviews')
         .populate('notifs')
         .exec();
-      let review = await Review.create(req.body.review);
+      const review = await Review.create(req.body.review);
       //add author username/id and associated course to the review
       review.author = req.user;
       review.user = user;
@@ -43,12 +43,12 @@ router.post(
       // calculate the new average review for the course
       user.rating = calculateAverage(user.reviews);
       //save course
-      let newNotification = {
+      const newNotification = {
         target: user._id,
         message: 'created a new review',
-        isItem: false
+        isItem: false,
       };
-      let notification = await Notification.create(newNotification);
+      const notification = await Notification.create(newNotification);
       user.notifs.push(notification);
       await user.save();
       req.flash('success', 'Your review has been successfully added.');
@@ -62,11 +62,11 @@ router.post(
 );
 
 //calculates average
-const calculateAverage = (reviews: IReview[]) => {
+const calculateAverage = (reviews: mReview[]) => {
   if (reviews.length === 0) {
     return 0;
   }
-  var sum: number = 0;
+  let sum: number = 0;
   reviews.forEach(element => {
     sum += element.rating;
   });
@@ -83,16 +83,16 @@ router.put(
       await Review.findByIdAndUpdate(req.params.review_id, req.body.review, {
         new: true,
       }).exec();
-      let user = await User.findById(req.params.id).exec();
+      const user = await User.findById(req.params.id).exec();
       // recalculate course average
       user.rating = calculateAverage(user.reviews);
       //save changes
-      let newNotification = {
+      const newNotification = {
         targetSlug: user._id,
         message: 'updated a review',
-        isItem: false
+        isItem: false,
       };
-      let notification = await Notification.create(newNotification);
+      const notification = await Notification.create(newNotification);
       user.notifs.push(notification);
       await user.save();
       req.flash('success', 'Your review was successfully edited.');
@@ -110,7 +110,7 @@ router.delete(
   async (req: express.Request, res: express.Response) => {
     try {
       await Review.findByIdAndRemove(req.params.review_id).exec();
-      let user = await User.findByIdAndUpdate(
+      const user = await User.findByIdAndUpdate(
         req.params.id,
         {$pull: {reviews: req.params.review_id}},
         {new: true}
@@ -119,12 +119,12 @@ router.delete(
         .exec();
       // recalculate course average
       user.rating = calculateAverage(user.reviews);
-      let newNotification = {
+      const newNotification = {
         target: user._id,
         message: 'deleted a review',
-        isItem: false
+        isItem: false,
       };
-      let notification = await Notification.create(newNotification);
+      const notification = await Notification.create(newNotification);
       user.notifs.push(notification);
       await user.save();
       req.flash('success', 'Your review was deleted successfully.');
@@ -140,7 +140,7 @@ router.put(
   middleware.isLoggedIn,
   async (req: express.Request, res: express.Response) => {
     try {
-      let review = await Review.findById(req.params.review_id).exec();
+      const review = await Review.findById(req.params.review_id).exec();
       review.isReported = true;
       await review.save();
       req.flash('success', 'Review reported!');
@@ -158,7 +158,7 @@ router.put(
   middleware.isAdmin,
   async (req: express.Request, res: express.Response) => {
     try {
-      let review = await Review.findById(req.params.review_id).exec();
+      const review = await Review.findById(req.params.review_id).exec();
       review.isReported = false;
       await review.save();
       req.flash('success', 'Review resolved!');
@@ -176,7 +176,7 @@ router.put(
   middleware.isLoggedIn,
   async (req: express.Request, res: express.Response) => {
     try {
-      let review = await Review.findById(req.params.review_id).exec();
+      const review = await Review.findById(req.params.review_id).exec();
       if (review.upvoted(req.user.id)) {
         review.unvote(req.user.id);
         await review.save();
@@ -204,7 +204,7 @@ router.put(
   middleware.isLoggedIn,
   async (req: express.Request, res: express.Response) => {
     try {
-      let review = await Review.findById(req.params.review_id).exec();
+      const review = await Review.findById(req.params.review_id).exec();
       if (review.downvoted(req.user.id)) {
         review.unvote(req.user.id);
         await review.save();
@@ -227,12 +227,12 @@ router.put(
   }
 );
 
-router.get(
-  '/:review_id/votes',
-  async (req: express.Request, res: express.Response) => {
-    let review = await Review.findById(req.params.review_id).exec();
-    res.status(200).json(review.upvotes() - review.downvotes());
-  }
-);
+// router.get(
+//   '/:review_id/votes',
+//   async (req: express.Request, res: express.Response) => {
+//     let review = await Review.findById(req.params.review_id).exec();
+//     res.status(200).json(review.upvotes() - review.downvotes());
+//   }
+// );
 
 export default router;

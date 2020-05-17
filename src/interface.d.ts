@@ -1,14 +1,16 @@
-import { IUser } from './models/user'
-import { IItem } from './models/item'
+import {mUser} from './models/user';
+import {mItem} from './models/item';
 
 declare global {
-    namespace Express {
-        interface User extends IUser {}
-    }
+  namespace Express {
+    interface User extends mUser {}
+  }
 }
 
 declare global {
-    namespace Express {
-        interface Request {item?:IItem}
+  namespace Express {
+    interface Request {
+      item?: mItem;
     }
+  }
 }

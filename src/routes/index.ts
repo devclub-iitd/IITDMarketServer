@@ -4,7 +4,7 @@ import passport from 'passport';
 import User from '../models/user';
 import Item from '../models/item';
 import Review from '../models/review';
-import Notification from '../models/notification';
+import '../models/notification';
 import middleware from '../middleware';
 
 //handle sign up logic
@@ -13,7 +13,7 @@ router.post(
   middleware.checkRegister,
   async (req: express.Request, res: express.Response) => {
     try {
-      var object: Object = {
+      const userobj: Record<string, any> = {
         username: req.body.username,
         avatar: req.body.avatar,
         contact_number: req.body.contactNumber,
@@ -24,7 +24,7 @@ router.post(
         email: req.body.email,
         description: req.body.description,
       };
-      let newUser = new User(object);
+      let newUser = new User(userobj);
       if (req.body.adminCode === process.env.ADMIN_CODE) {
         newUser.isAdmin = true;
       }
@@ -45,7 +45,7 @@ router.post(
     failureFlash: true,
     successFlash: 'Welcome!',
   }),
-  (req, res) => {}
+  () => {}
 );
 
 // logout route
@@ -66,7 +66,7 @@ router.get(
   async (req: express.Request, res: express.Response) => {
     try {
       console.log(req.user);
-      let user = await User.findById(req.user._id).exec();
+      const user = await User.findById(req.user._id).exec();
       user.folCategory.push(req.params.slug);
       await user.save();
       req.login(user, () => {});
@@ -85,13 +85,13 @@ router.get(
   middleware.isLoggedIn,
   async (req: express.Request, res: express.Response) => {
     try {
-      let user = await User.findById(req.user._id)
+      const user = await User.findById(req.user._id)
         .populate({
           path: 'notifs',
           options: {sort: {_id: -1}},
         })
         .exec();
-      let allNotifications = user.notifs;
+      const allNotifications = user.notifs;
       res.json(allNotifications);
     } catch (err) {
       req.flash('error', err.message);

@@ -1,19 +1,17 @@
 import express from 'express';
 const router = express.Router();
-import passport from 'passport';
 import User from '../models/user';
 import Item from '../models/item';
 import Chat from '../models/chat';
-import Review from '../models/review';
-import Notification from '../models/notification';
+import '../models/review';
+import '../models/notification';
 import middleware from '../middleware';
-import {Document} from 'mongoose';
 import {error} from 'console';
 
 //User Profile
 router.get('/:id', async (req: express.Request, res: express.Response) => {
   try {
-    let foundUser = await User.findById(req.params.id)
+    const foundUser = await User.findById(req.params.id)
       .populate('reviews')
       .populate({
         path: 'chats',
@@ -25,7 +23,7 @@ router.get('/:id', async (req: express.Request, res: express.Response) => {
         },
       })
       .exec();
-    let foundItem = await Item.find({
+    const foundItem = await Item.find({
       $and: [{seller: foundUser}, {userIsAnonymous: true}],
     }).exec();
     if (req.user || req.user.id !== req.params.id) {
@@ -42,7 +40,7 @@ router.put(
   middleware.isAdmin,
   async (req: express.Request, res: express.Response) => {
     try {
-      let user = await User.findById(req.params.id).exec();
+      const user = await User.findById(req.params.id).exec();
       if (!user.isAdmin) {
         user.isBanned = true;
       }
@@ -66,7 +64,7 @@ router.put('/:id/ban/temp', middleware.isAdmin, async function (
   res: express.Response
 ) {
   try {
-    let user = await User.findById(req.params.id).exec();
+    const user = await User.findById(req.params.id).exec();
     if (!user.isAdmin) {
       user.banExpires = new Date(
         Date.now() + 3600000 * 24 * Number(req.body.day)
@@ -86,7 +84,7 @@ router.put(
   middleware.isLoggedIn,
   async (req: express.Request, res: express.Response) => {
     try {
-      let user = await User.findById(req.params.id).exec();
+      const user = await User.findById(req.params.id).exec();
       if (req.user._id !== user._id || req.user.isAdmin) {
         throw error('invalid user');
       }
