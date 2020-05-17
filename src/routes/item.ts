@@ -42,6 +42,7 @@ router.get('/', async (req: express.Request, res: express.Response) => {
     if (req.query.search) {
       const regex = new RegExp(escapeRegex(`${req.query.search}`), 'gi');
       let allItems = await Item.find({title: `${regex}`})
+        .sort({createdAt: -1})
         .skip(perPage * pageNumber - perPage)
         .limit(perPage)
         .exec();
@@ -59,6 +60,53 @@ router.get('/', async (req: express.Request, res: express.Response) => {
     } else {
       // get all campgrounds from DB
       let allItems = await Item.find({})
+        .sort({createdAt: -1})
+        .skip(perPage * pageNumber - perPage)
+        .limit(perPage)
+        .exec();
+      let count = await Item.countDocuments().exec();
+      res.json({
+        items: allItems,
+        current: pageNumber,
+        pages: Math.ceil(count / perPage),
+        noMatch: noMatch,
+        search: false,
+      });
+    }
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
+// INDEX - show all items by category 
+router.get('/:category', async (req: express.Request, res: express.Response) => {
+  try {
+    const perPage: number = 8;
+    const pageQuery = parseInt(`${req.query.page}`);
+    const pageNumber: number = pageQuery ? pageQuery : 1;
+    let noMatch = null;
+    if (req.query.search) {
+      const regex = new RegExp(escapeRegex(`${req.query.search}`), 'gi');
+      let allItems = await Item.find({$and: [{title: `${regex}`},{category: req.params.category}]})
+        .sort({createdAt: -1})
+        .skip(perPage * pageNumber - perPage)
+        .limit(perPage)
+        .exec();
+      let count = await Item.count({title: `${regex}`}).exec();
+      if (allItems.length < 1) {
+        noMatch = 'No items match that query, please try again.';
+      }
+      res.json({
+        items: allItems,
+        current: pageNumber,
+        pages: Math.ceil(count / perPage),
+        noMatch: noMatch,
+        search: req.query.search,
+      });
+    } else {
+      // get all campgrounds from DB
+      let allItems = await Item.find({category: req.params.category})
+        .sort({createdAt: -1})
         .skip(perPage * pageNumber - perPage)
         .limit(perPage)
         .exec();
@@ -128,8 +176,9 @@ router.post(
       let item = await Item.create(newItem);
       let users = await User.find({folCategory: item.category}).exec();
       let newNotification = {
-        targetItem: item,
+        target: item._id,
         message: 'Another item came for you in which u may be interested',
+        isItem: true
       };
       // Socket !!
       for (let follower of users) {
@@ -196,8 +245,9 @@ router.put(
       await req.item.save();
       let users = await User.find({folCategory: req.item.category}).exec();
       let newNotification = {
-        targetItem: req.item,
+        target: req.item._id,
         message: 'updated an item',
+        isItem: true
       };
       // Socket !!
       for (let follower of users) {
@@ -226,8 +276,9 @@ router.delete(
   async (req: express.Request, res: express.Response) => {
     try {
       let newNotification = {
-        targetItem: req.item,
+        target: req.item._id,
         message: 'deleted an item',
+        isItem: true
       };
       for (let notifusers of req.item.chats) {
         let notification = await Notification.create(newNotification);
@@ -265,8 +316,9 @@ router.post(
           chat.save();
         }
         let newNotification = {
-          targetItem: req.item,
+          target: req.item._id,
           message: 'deleted an item',
+          isItem: true
         };
         let notification = await Notification.create(newNotification);
         user.notifs.push(notification);
@@ -300,8 +352,9 @@ router.post(
           chat.save();
         }
         let newNotification = {
-          targetItem: req.item,
+          target: req.item._id,
           message: 'deleted an item',
+          isItem: true
         };
         let notification = await Notification.create(newNotification);
         req.item.seller.notifs.push(notification);

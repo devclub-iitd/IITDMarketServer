@@ -15,6 +15,7 @@ export interface IUser extends mongoose.Document {
     chats: IChat[];
     firstName: String;
     lastName: String;
+    fullName: String
     email: String;
     isBanned: Boolean;
     banExpires: Date;
@@ -41,6 +42,7 @@ const UserSchema = new mongoose.Schema({
     ],
     firstName: String,
     lastName: String,
+    fullName: String,
     email: { type: String, required: true, unique: true },
     isBanned: { type: Boolean, default: false },
     banExpires: Date,
@@ -72,5 +74,9 @@ const UserSchema = new mongoose.Schema({
 });
 
 UserSchema.plugin(passportLocalMongoose)
+
+UserSchema.virtual("fullName").get(function(this: IUser) {
+    return (this.firstName || "") + " " + (this.lastName || "");
+  });
 
 export default mongoose.model<IUser>("User", UserSchema as PassportLocalSchema);

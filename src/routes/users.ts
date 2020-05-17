@@ -8,6 +8,7 @@ import Review from '../models/review';
 import Notification from '../models/notification';
 import middleware from '../middleware';
 import {Document} from 'mongoose';
+import {error} from 'console';
 
 //User Profile
 router.get('/:id', async (req: express.Request, res: express.Response) => {
@@ -45,6 +46,11 @@ router.put(
       if (!user.isAdmin) {
         user.isBanned = true;
       }
+      user.folCategory = [];
+      await Chat.remove({
+        _id: {$in: user.chats},
+      }).exec();
+      await Item.remove({seller: user._id}).exec();
       await user.save();
       res.send();
     } catch (err) {
@@ -74,5 +80,33 @@ router.put('/:id/ban/temp', middleware.isAdmin, async function (
     res.status(500).send('back');
   }
 });
+
+router.put(
+  '/:id',
+  middleware.isLoggedIn,
+  async (req: express.Request, res: express.Response) => {
+    try {
+      let user = await User.findById(req.params.id).exec();
+      if (req.user._id !== user._id || req.user.isAdmin) {
+        throw error('invalid user');
+      }
+      user.avatar = req.body.avatar;
+      user.contact_number = req.body.contactNumber;
+      user.entry_number = req.body.entryNumber;
+      user.hostel = req.body.hostel;
+      user.firstName = req.body.firstName;
+      user.lastName = req.body.lastName;
+      user.email = req.body.email;
+      user.description = req.body.description;
+      await user.save();
+      req.login(user, () => {});
+      res.send('Done');
+    } catch (err) {
+      console.log(err);
+      req.flash('error', err.message);
+      res.status(500).send('back');
+    }
+  }
+);
 
 export default router;

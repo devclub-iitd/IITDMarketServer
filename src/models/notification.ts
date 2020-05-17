@@ -1,19 +1,17 @@
 import mongoose from "mongoose";
-import { IItem } from "./item";
 
 export interface INotification extends mongoose.Document {
-	targetItem: IItem
+	target: String
 	message: String
 	isRead: Boolean
+	isItem: Boolean
 }
 
 const notificationSchema = new mongoose.Schema({
-	targetItem: {
-		type: mongoose.Schema.Types.ObjectId,
-		ref: 'Item'
-	},
+	target: String,
 	message: String,
-	isRead: { type: Boolean, default: false }
+	isRead: { type: Boolean, default: false },
+	isItem: Boolean
 }, {
 	timestamps: true
 });

@@ -44,9 +44,9 @@ router.post(
       user.rating = calculateAverage(user.reviews);
       //save course
       let newNotification = {
-        username: req.user.username,
-        targetSlug: user,
+        target: user._id,
         message: 'created a new review',
+        isItem: false
       };
       let notification = await Notification.create(newNotification);
       user.notifs.push(notification);
@@ -88,9 +88,9 @@ router.put(
       user.rating = calculateAverage(user.reviews);
       //save changes
       let newNotification = {
-        username: req.user.username,
-        targetSlug: user,
+        targetSlug: user._id,
         message: 'updated a review',
+        isItem: false
       };
       let notification = await Notification.create(newNotification);
       user.notifs.push(notification);
@@ -120,10 +120,9 @@ router.delete(
       // recalculate course average
       user.rating = calculateAverage(user.reviews);
       let newNotification = {
-        username: req.user.username,
-        targetSlug: user,
-        isCourse: false,
+        target: user._id,
         message: 'deleted a review',
+        isItem: false
       };
       let notification = await Notification.create(newNotification);
       user.notifs.push(notification);
