@@ -26,19 +26,19 @@ router.post('/new', middleware.isLoggedIn, async (req:express.Request, res:expre
     await user.save()
     req.login(user, () => {})
     req.flash('success', 'Successfully followed ' + req.params.id + '!');
-    res.send('/item/' + req.params._id);
+    res.status(200).send('/item/' + req.params._id);
 })
 
 router.get('/:chatId', middleware.isLoggedIn, async (req, res) => {
     let chat = await Chat.findById(req.params.chatId).exec()
-    res.json(chat)
+    res.status(200).json(chat)
 })
 
 router.put('/:chatId', middleware.isLoggedIn, async (req, res) => {
     let chat =  await Chat.findById(req.params.chatId).exec()
     chat.messages.push(req.body.message)
     await chat.save()
-    res.send('Done')
+    res.status(200).send('Done')
 })
 
 export default router

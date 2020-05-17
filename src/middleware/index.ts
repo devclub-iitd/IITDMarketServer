@@ -61,10 +61,7 @@ export default {
     if (req.user && req.user.isAdmin) {
       next();
     } else {
-      req.flash(
-        'error',
-        'This site is now read only thanks to spam and trolls.'
-      );
+      req.flash('error','This site is now read only thanks to spam and trolls.');
       res.status(500).send('/item');
     }
   },
@@ -74,7 +71,7 @@ export default {
         if (err || !foundReview) {
           res.status(500).send('back');
         } else {
-          // does user own the comment?
+          // does user own the review?
           if (foundReview.author === req.user._id || req.user.isAdmin) {
             next();
           } else {
@@ -124,7 +121,7 @@ export default {
       }).exec();
       if (user) {
         req.flash('error','You are already registered with email ' + user.email);
-        return res.redirect('/register');
+        res.status(500).send('/register');
       } else {
         next();
       }
