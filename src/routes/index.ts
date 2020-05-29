@@ -6,6 +6,21 @@ import Item from '../models/item';
 import Review from '../models/review';
 import '../models/notification';
 import middleware from '../middleware';
+import mongodb from 'mongodb'
+
+const foo = function(req: express.Request, res: express.Response, next: express.NextFunction) {
+  let _changeStream = User.watch([{$match: {'fullDocument._id': req.user._id}}])
+  return {
+    get changeStream() {
+      return _changeStream
+    },
+    set changeStream(val) {
+      _changeStream = val
+    }
+  }
+};
+
+let globals: {changeStream: mongodb.ChangeStream<any>} = null;
 
 //handle sign up logic
 router.post(
@@ -39,19 +54,17 @@ router.post(
 //handling login logic
 router.post(
   '/login',
-  passport.authenticate('local', {
-    successRedirect: '/item',
-    failureRedirect: '/login',
-    failureFlash: true,
-    successFlash: 'Welcome!',
-  }),
-  () => {}
+  passport.authenticate('local'),
+  (req: express.Request, res: express.Response, next) => {
+    globals = foo(req, res, next)
+  }
 );
 
 // logout route
-router.get('/logout', (req: express.Request, res: express.Response) => {
+router.get('/logout',async (req: express.Request, res: express.Response) => {
   try {
     req.logout();
+    await globals.changeStream.close();
     req.flash('success', 'See you later!');
     res.status(200).send('/item');
   } catch (err) {
@@ -60,7 +73,7 @@ router.get('/logout', (req: express.Request, res: express.Response) => {
 });
 
 // follow user
-router.get(
+router.patch(
   '/follow/:slug',
   middleware.isLoggedIn,
   async (req: express.Request, res: express.Response) => {
@@ -68,6 +81,25 @@ router.get(
       console.log(req.user);
       const user = await User.findById(req.user._id).exec();
       user.folCategory.push(req.params.slug);
+      await user.save();
+      req.login(user, () => {});
+      req.flash('success', 'Successfully followed ' + req.params.id + '!');
+      res.status(200).send('/users/' + req.user._id);
+    } catch (err) {
+      req.flash('error', err.message);
+      res.status(500).send('back');
+    }
+  }
+);
+
+router.patch(
+  '/unfollow/:slug',
+  middleware.isLoggedIn,
+  async (req: express.Request, res: express.Response) => {
+    try {
+      console.log(req.user);
+      const user = await User.findById(req.user._id).exec();
+      user.folCategory = user.folCategory.filter((value) => value !== req.params.slug);
       await user.save();
       req.login(user, () => {});
       req.flash('success', 'Successfully followed ' + req.params.id + '!');
@@ -115,5 +147,24 @@ router.get(
     }
   }
 );
+
+router.get('/streamUser', (req: express.Request, res: express.Response) => {
+  res.writeHead(200, {
+    'Connection': "keep-alive",
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache"
+  })
+  // res.setHeader('Cache-Control', 'no-cache');
+  // res.setHeader('Content-Type', 'text/event-stream');
+  res.flushHeaders();
+  if (req.user) {
+    globals.changeStream.on('change', (change) => {
+      res.write(`data: ${JSON.stringify(change)}\n\n`)
+    })
+  }
+  res.on('close', () => {
+    res.end();
+  })
+})
 
 export default router;

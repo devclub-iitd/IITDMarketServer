@@ -8,7 +8,7 @@ import passport from 'passport';
 import cookieParser from 'cookie-parser';
 import psLocal from 'passport-local';
 import flash from 'connect-flash';
-import Item from './models/item';
+import './models/item';
 import User from './models/user';
 import session from 'express-session';
 import methodOverride from 'method-override';
@@ -21,6 +21,8 @@ import itemRoutes from './routes/item';
 import indexRoutes from './routes/index';
 import userReviewRoutes from './routes/userReview';
 import userRoutes from './routes/users';
+import moment from 'moment';
+import cors from 'cors';
 
 mongoose.set('useNewUrlParser', true);
 mongoose.set('useFindAndModify', false);
@@ -34,7 +36,7 @@ const databaseUri = process.env.MONGODB_URI || 'mongodb://localhost/iitd';
 
 mongoose
   .connect(databaseUri)
-  .then(() => console.log(`Database connected`))
+  .then(() => console.log('Database connected'))
   .catch(err => console.log(`Database connection error: ${err.message}`));
 
 app.use(bodyParser.urlencoded({extended: true}));
@@ -43,8 +45,8 @@ app.use(express.static(__dirname + '/public'));
 app.use(methodOverride('_method'));
 app.use(cookieParser('secret'));
 //require moment
-app.locals.moment = require('moment');
-
+app.locals.moment = moment;
+app.use(cors())
 // PASSPORT CONFIGURATION
 app.use(
   require('express-session')({
@@ -73,7 +75,9 @@ app.use(
     res.locals.currentUser = req.user;
     if (req.user) {
       try {
-        let user = await User.findById(req.user._id)
+        const changeStream = await User.watch([{$match: {}}])
+        changeStream.on('change', (change) => console.log(change))
+        const user = await User.findById(req.user._id)
           .populate('notifs', null, {isRead: false})
           .exec();
         res.locals.notifications = user.notifs.reverse();
@@ -91,6 +95,6 @@ app.use('/', indexRoutes);
 app.use('/item', itemRoutes);
 app.use('/users', userRoutes);
 app.use('/users/:id/reviews', userReviewRoutes);
-app.set('port', process.env.PORT || 3000);
+app.set('port', process.env.PORT || 5000);
 
 export default app;

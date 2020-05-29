@@ -1,6 +1,6 @@
 import express from 'express';
 const router = express.Router({mergeParams: true});
-import Review, {mReview} from '../models/review';
+import Review, {MReview} from '../models/review';
 import User from '../models/user';
 import Notification from '../models/notification';
 import middleware from '../middleware';
@@ -62,7 +62,7 @@ router.post(
 );
 
 //calculates average
-const calculateAverage = (reviews: mReview[]) => {
+const calculateAverage = (reviews: MReview[]) => {
   if (reviews.length === 0) {
     return 0;
   }
@@ -135,7 +135,7 @@ router.delete(
   }
 );
 
-router.put(
+router.patch(
   '/:review_id/report',
   middleware.isLoggedIn,
   async (req: express.Request, res: express.Response) => {
@@ -153,7 +153,7 @@ router.put(
   }
 );
 
-router.put(
+router.patch(
   '/:review_id/resolve',
   middleware.isAdmin,
   async (req: express.Request, res: express.Response) => {
@@ -171,7 +171,7 @@ router.put(
   }
 );
 
-router.put(
+router.patch(
   '/:review_id/upvote',
   middleware.isLoggedIn,
   async (req: express.Request, res: express.Response) => {
@@ -199,7 +199,7 @@ router.put(
   }
 );
 
-router.put(
+router.patch(
   '/:review_id/downvote',
   middleware.isLoggedIn,
   async (req: express.Request, res: express.Response) => {

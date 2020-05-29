@@ -1,19 +1,19 @@
 import mongoose from 'mongoose';
-import {mUser} from './user';
+import {MUser} from './user';
 const voting = require('mongoose-voting');
 
-export interface mReview extends mongoose.Document {
+export interface MReview extends mongoose.Document {
   rating: number;
   text: string;
-  author: mUser;
-  user: mUser;
+  author: MUser;
+  user: MUser;
   isReported: boolean;
   isAnonymous: boolean;
-  upvoted: (user: mUser) => boolean;
-  downvoted: (user: mUser) => boolean;
-  unvote: (user: mUser) => void;
-  upvote: (user: mUser) => void;
-  downvote: (user: mUser) => void;
+  upvoted: (user: MUser) => boolean;
+  downvoted: (user: MUser) => boolean;
+  unvote: (user: MUser) => void;
+  upvote: (user: MUser) => void;
+  downvote: (user: MUser) => void;
   upvotes: () => number;
   downvotes: () => number;
 }
@@ -60,4 +60,4 @@ const reviewSchema = new mongoose.Schema(
 
 reviewSchema.plugin(voting);
 
-export default mongoose.model<mReview>('Review', reviewSchema);
+export default mongoose.model<MReview>('Review', reviewSchema);

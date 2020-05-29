@@ -80,7 +80,7 @@ router.get('/', async (req: express.Request, res: express.Response) => {
 
 // INDEX - show all items by category
 router.get(
-  '/:category',
+  '/cat/:category',
   async (req: express.Request, res: express.Response) => {
     try {
       const perPage = 8;
@@ -304,7 +304,7 @@ router.delete(
   }
 );
 
-router.post(
+router.patch(
   '/:id/sellIni',
   middleware.isLoggedIn,
   middleware.checkUserItem,
@@ -342,8 +342,8 @@ router.post(
   }
 );
 
-router.post(
-  ':id/sellFin',
+router.patch(
+  '/:id/sellFin',
   middleware.isLoggedIn,
   middleware.checkItem,
   async (req: express.Request, res: express.Response) => {
@@ -378,8 +378,8 @@ router.post(
   }
 );
 
-router.put(
-  '/id/report',
+router.patch(
+  '/:id/report',
   middleware.isLoggedIn,
   async (req: express.Request, res: express.Response) => {
     try {

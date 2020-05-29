@@ -1,15 +1,15 @@
 import mongoose from 'mongoose';
-import {mUser} from './user';
-import {mChat} from './chat';
+import {MUser} from './user';
+import {MChat} from './chat';
 
-export interface mItem extends mongoose.Document {
+export interface MItem extends mongoose.Document {
   title: string;
   image: string[];
   description: string;
   price: number;
-  seller: mUser;
-  buyer: mUser;
-  chats: mChat[];
+  seller: MUser;
+  buyer: MUser;
+  chats: MChat[];
   category: string;
   tag: string;
   buy_date: Date;
@@ -22,7 +22,7 @@ export interface mItem extends mongoose.Document {
   userIsAnonymous: boolean;
 }
 
-var itemSchema = new mongoose.Schema(
+const itemSchema = new mongoose.Schema(
   {
     title: {
       type: String,
@@ -91,4 +91,4 @@ var itemSchema = new mongoose.Schema(
   }
 );
 
-export default mongoose.model<mItem>('Item', itemSchema);
+export default mongoose.model<MItem>('Item', itemSchema);

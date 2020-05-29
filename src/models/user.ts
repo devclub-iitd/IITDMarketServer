@@ -1,28 +1,27 @@
 import mongoose from 'mongoose';
 import passportLocalMongoose from 'passport-local-mongoose';
 import {PassportLocalSchema} from 'mongoose';
-import {mChat} from './chat';
-import {mReview} from './review';
-import {mNotification} from './notification';
+import {MChat} from './chat';
+import {MReview} from './review';
+import {MNotification} from './notification';
 
-export interface mUser extends mongoose.Document {
+export interface MUser extends mongoose.Document {
   username: string;
   password: string;
   avatar: string;
   contact_number: string;
   entry_number: string;
   hostel: string;
-  chats: mChat[];
+  chats: MChat[];
   firstName: string;
   lastName: string;
-  fullName: string;
   email: string;
   isBanned: boolean;
   banExpires: Date;
   isAdmin: boolean;
   description: string;
-  notifs: mNotification[];
-  reviews: mReview[];
+  notifs: MNotification[];
+  reviews: MReview[];
   rating: number;
   folCategory: string[];
 }
@@ -43,7 +42,6 @@ const UserSchema = new mongoose.Schema(
     ],
     firstName: String,
     lastName: String,
-    fullName: String,
     email: {type: String, required: true, unique: true},
     isBanned: {type: Boolean, default: false},
     banExpires: Date,
@@ -78,8 +76,4 @@ const UserSchema = new mongoose.Schema(
 
 UserSchema.plugin(passportLocalMongoose);
 
-UserSchema.virtual('fullName').get(function (this: mUser) {
-  return (this.firstName || '') + ' ' + (this.lastName || '');
-});
-
-export default mongoose.model<mUser>('User', UserSchema as PassportLocalSchema);
+export default mongoose.model<MUser>('User', UserSchema as PassportLocalSchema);

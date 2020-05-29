@@ -9,15 +9,15 @@ router.post(
   '/new',
   middleware.isLoggedIn,
   async (req: express.Request, res: express.Response) => {
-    let item = await Item.findById(req.params.id).exec();
-    let user = await User.findById(req.user._id).exec();
-    let newChat = {
+    const item = await Item.findById(req.params.id).exec();
+    const user = await User.findById(req.user._id).exec();
+    const newChat = {
       user1: item.seller,
       user2: user,
       item: item,
       message: ['jjjk'],
     };
-    let chat = await Chat.create(newChat);
+    const chat = await Chat.create(newChat);
     item.seller.chats.push(chat);
     await item.seller.save();
     item.chats.push(chat);
@@ -32,12 +32,12 @@ router.post(
 );
 
 router.get('/:chatId', middleware.isLoggedIn, async (req, res) => {
-  let chat = await Chat.findById(req.params.chatId).exec();
+  const chat = await Chat.findById(req.params.chatId).exec();
   res.status(200).json(chat);
 });
 
 router.put('/:chatId', middleware.isLoggedIn, async (req, res) => {
-  let chat = await Chat.findById(req.params.chatId).exec();
+  const chat = await Chat.findById(req.params.chatId).exec();
   chat.messages.push(req.body.message);
   await chat.save();
   res.status(200).send('Done');

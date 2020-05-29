@@ -1,11 +1,11 @@
 import mongoose from 'mongoose';
-import {mUser} from './user';
-import {mItem} from './item';
+import {MUser} from './user';
+import {MItem} from './item';
 
-export interface mChat extends mongoose.Document {
-  user1: mUser;
-  user2: mUser;
-  item: mItem;
+export interface MChat extends mongoose.Document {
+  user1: MUser;
+  user2: MUser;
+  item: MItem;
   messages: string[];
   active: boolean;
 }
@@ -43,4 +43,4 @@ const chatSchema = new mongoose.Schema(
 
 // chatSchema.path('users').validate(ArrLen, '{PATH} exceeds length');
 
-export default mongoose.model<mChat>('Chat', chatSchema);
+export default mongoose.model<MChat>('Chat', chatSchema);

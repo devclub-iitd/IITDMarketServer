@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-export interface mNotification extends mongoose.Document {
+export interface MNotification extends mongoose.Document {
   target: string;
   message: string;
   isRead: boolean;
@@ -19,7 +19,7 @@ const notificationSchema = new mongoose.Schema(
   }
 );
 
-export default mongoose.model<mNotification>(
+export default mongoose.model<MNotification>(
   'Notification',
   notificationSchema
 );

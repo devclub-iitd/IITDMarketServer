@@ -97,7 +97,7 @@ export default {
     next: NextFunction
   ) => {
     if (req.isAuthenticated()) {
-      let foundUser = await User.findById(req.params.id)
+      const foundUser = await User.findById(req.params.id)
         .populate('reviews')
         .exec();
       if (!foundUser) {
@@ -105,7 +105,7 @@ export default {
         res.status(500).send('back');
       } else {
         // check if req.user._id exists in foundCourse.reviews
-        var foundUserReview = foundUser.reviews.some(
+        const foundUserReview = foundUser.reviews.some(
           review => review.author === req.user._id
         );
         if (foundUserReview) {
@@ -121,14 +121,14 @@ export default {
     }
   },
   checkRegister: async (req: Request, res: Response, next: NextFunction) => {
-    let exp: RegExp = /iitd\.ac\.in$/gm;
+    const exp = /iitd\.ac\.in$/gm;
     if (!exp.test(req.body.email)) {
       next();
     } else {
-      let kebid: RegExp = /^(\w+)/gm;
+      const kebid = /^(\w+)/gm;
       kebid.lastIndex = 0;
-      let result: RegExpExecArray = kebid.exec(req.body.email);
-      let user = await User.findOne({
+      const result: RegExpExecArray = kebid.exec(req.body.email);
+      const user = await User.findOne({
         email: String(new RegExp(`^${result[0]}`, 'gm')),
       }).exec();
       if (user) {
