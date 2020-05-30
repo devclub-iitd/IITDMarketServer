@@ -238,7 +238,9 @@ router.put(
       };
       await req.item.save();
       const users = await User.find({folCategory: req.item.category}).exec();
-      const chats = await Chat.find({item: {_id: req.params.id, title: req.body.title}}).exec();
+      const chats = await Chat.find({
+        item: {_id: req.params.id, title: req.body.title},
+      }).exec();
       const newNotification = {
         target: req.item._id,
         message: 'updated an item',
@@ -275,7 +277,9 @@ router.delete(
         message: 'deleted an item',
         isItem: true,
       };
-      const chats = await Chat.find({item: {_id: req.params.id, title: req.item.title}}).exec();
+      const chats = await Chat.find({
+        item: {_id: req.params.id, title: req.item.title},
+      }).exec();
       for (const notifusers of chats) {
         const notification = await Notification.create(newNotification);
         const userx = await User.findById(notifusers.user1._id).exec();
@@ -307,7 +311,9 @@ router.patch(
         req.item.buyer = user;
         req.item.buy_date = new Date(Date.now());
         req.item.status = 'INPROCESS';
-        const chats = await Chat.find({item: {_id: req.params.id, title: req.item.title}}).exec();
+        const chats = await Chat.find({
+          item: {_id: req.params.id, title: req.item.title},
+        }).exec();
         for (const chat of chats) {
           chat.active = false;
           chat.save();
@@ -344,7 +350,9 @@ router.patch(
         req.item.status = 'UNSOLD';
         req.item.buy_date = undefined;
         req.item.buyer = undefined;
-        const chats = await Chat.find({item: {_id: req.params.id, title: req.item.title}}).exec();
+        const chats = await Chat.find({
+          item: {_id: req.params.id, title: req.item.title},
+        }).exec();
         for (let chat of chats) {
           chat.active = true;
           chat.save();

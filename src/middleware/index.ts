@@ -32,7 +32,7 @@ export default {
         req.flash('error', 'Sorry, that course does not exist!');
         res.status(500).send('/item');
       } else if (foundItem.seller === req.user._id || req.user.isAdmin) {
-        req.item = foundItem
+        req.item = foundItem;
         next();
       } else {
         req.flash('error', "You don't have permission to do that!");

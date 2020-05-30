@@ -46,10 +46,10 @@ app.use(methodOverride('_method'));
 app.use(cookieParser('secret'));
 //require moment
 app.locals.moment = moment;
-app.use(cors())
+app.use(cors());
 // PASSPORT CONFIGURATION
 app.use(
-  require('express-session')({
+  session({
     secret: 'Random Words have power!',
     resave: false,
     saveUninitialized: false,
@@ -75,8 +75,8 @@ app.use(
     res.locals.currentUser = req.user;
     if (req.user) {
       try {
-        const changeStream = await User.watch([{$match: {}}])
-        changeStream.on('change', (change) => console.log(change))
+        const changeStream = await User.watch([{$match: {}}]);
+        changeStream.on('change', change => console.log(change));
         const user = await User.findById(req.user._id)
           .populate('notifs', null, {isRead: false})
           .exec();

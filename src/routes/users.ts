@@ -37,11 +37,16 @@ router.put(
         user.isBanned = true;
       }
       user.folCategory = [];
-      const chats = await Chat.find({$or: [{user1: {_id: req.params.id, username: user.username}}, {user2: {_id: req.params.id, username: user.username}}]})
+      const chats = await Chat.find({
+        $or: [
+          {user1: {_id: req.params.id, username: user.username}},
+          {user2: {_id: req.params.id, username: user.username}},
+        ],
+      });
       for (let chat of chats) {
         await Message.remove({
-          _id: {$in: chat.messages}
-        })
+          _id: {$in: chat.messages},
+        });
         chat.remove();
       }
       await Item.remove({seller: user._id}).exec();

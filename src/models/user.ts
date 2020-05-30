@@ -11,7 +11,7 @@ export interface MUser extends mongoose.Document {
   contact_number: string;
   entry_number: string;
   hostel: string;
-  chatPersons: {username: string, _id: string}[];
+  chatPersons: {username: string; _id: string}[];
   firstName: string;
   lastName: string;
   email: string;
@@ -36,7 +36,7 @@ const UserSchema = new mongoose.Schema(
     chatPersons: [
       {
         username: String,
-        _id: String
+        _id: String,
       },
     ],
     firstName: String,
