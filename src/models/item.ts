@@ -1,6 +1,5 @@
 import mongoose from 'mongoose';
 import {MUser} from './user';
-import {MChat} from './chat';
 
 export interface MItem extends mongoose.Document {
   title: string;
@@ -9,7 +8,6 @@ export interface MItem extends mongoose.Document {
   price: number;
   seller: MUser;
   buyer: MUser;
-  chats: MChat[];
   category: string;
   tag: string;
   buy_date: Date;
@@ -26,7 +24,7 @@ const itemSchema = new mongoose.Schema(
   {
     title: {
       type: String,
-      required: 'Course title cannot be blank',
+      required: 'Item title cannot be blank',
     },
     image: [
       {
@@ -50,12 +48,6 @@ const itemSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
     },
-    chats: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Chat',
-      },
-    ],
     category: {
       type: String,
       enum: ['GENERAL', 'COOLER', 'LAPTOP', 'CYCLE', 'MATTRESS'],

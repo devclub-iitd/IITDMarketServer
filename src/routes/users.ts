@@ -3,6 +3,7 @@ const router = express.Router();
 import User from '../models/user';
 import Item from '../models/item';
 import Chat from '../models/chat';
+import Message from '../models/message';
 import '../models/review';
 import '../models/notification';
 import middleware from '../middleware';
@@ -13,15 +14,6 @@ router.get('/:id', async (req: express.Request, res: express.Response) => {
   try {
     const foundUser = await User.findById(req.params.id)
       .populate('reviews')
-      .populate({
-        path: 'chats',
-        match: {
-          $and: [
-            {active: true},
-            {$or: [{user1: req.params.id}, {user2: req.params.id}]},
-          ],
-        },
-      })
       .exec();
     const foundItem = await Item.find({
       $and: [{seller: foundUser}, {userIsAnonymous: true}],
@@ -45,9 +37,13 @@ router.put(
         user.isBanned = true;
       }
       user.folCategory = [];
-      await Chat.remove({
-        _id: {$in: user.chats},
-      }).exec();
+      const chats = await Chat.find({$or: [{user1: {_id: req.params.id, username: user.username}}, {user2: {_id: req.params.id, username: user.username}}]})
+      for (let chat of chats) {
+        await Message.remove({
+          _id: {$in: chat.messages}
+        })
+        chat.remove();
+      }
       await Item.remove({seller: user._id}).exec();
       await user.save();
       res.send();

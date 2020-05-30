@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
 import passportLocalMongoose from 'passport-local-mongoose';
 import {PassportLocalSchema} from 'mongoose';
-import {MChat} from './chat';
 import {MReview} from './review';
 import {MNotification} from './notification';
 
@@ -12,7 +11,7 @@ export interface MUser extends mongoose.Document {
   contact_number: string;
   entry_number: string;
   hostel: string;
-  chats: MChat[];
+  chatPersons: {username: string, _id: string}[];
   firstName: string;
   lastName: string;
   email: string;
@@ -34,10 +33,10 @@ const UserSchema = new mongoose.Schema(
     contact_number: String,
     entry_number: String,
     hostel: String,
-    chats: [
+    chatPersons: [
       {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Chat',
+        username: String,
+        _id: String
       },
     ],
     firstName: String,

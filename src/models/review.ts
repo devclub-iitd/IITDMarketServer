@@ -5,8 +5,8 @@ const voting = require('mongoose-voting');
 export interface MReview extends mongoose.Document {
   rating: number;
   text: string;
-  author: MUser;
-  user: MUser;
+  author: {username: string, _id: string};
+  user: {username: string, _id: string};
   isReported: boolean;
   isAnonymous: boolean;
   upvoted: (user: MUser) => boolean;
@@ -41,13 +41,13 @@ const reviewSchema = new mongoose.Schema(
     },
     // author id and username fields
     author: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      username: String,
+      _id: String
     },
     // user associated with the review
     user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      username: String,
+      _id: String
     },
     isReported: {type: Boolean, default: false},
     isAnonymous: {type: Boolean, default: false},

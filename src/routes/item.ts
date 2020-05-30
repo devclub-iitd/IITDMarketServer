@@ -195,7 +195,7 @@ router.post(
         follower.notifs.push(notification);
         follower.save();
       }
-      res.send('Done');
+      res.redirect('/item');
     } catch (err) {
       res.status(500).send(err.message);
     }
@@ -206,22 +206,7 @@ router.post(
 router.get('/:id', async (req: express.Request, res: express.Response) => {
   try {
     //find the item with provided ID
-    let item;
-    if (req.user) {
-      item = await Item.findById(req.params.id).exec();
-      if (item.seller === req.user.id) {
-        await item.populate('chats').execPopulate();
-      } else {
-        await item
-          .populate({
-            path: 'chats',
-            match: {user2: req.user.id},
-          })
-          .execPopulate();
-      }
-    } else {
-      item = await Item.findById(req.params.id).exec();
-    }
+    const item = await Item.findById(req.params.id).exec();
     res.json(item);
   } catch (err) {
     res.status(500).send(err.message);
@@ -253,6 +238,7 @@ router.put(
       };
       await req.item.save();
       const users = await User.find({folCategory: req.item.category}).exec();
+      const chats = await Chat.find({item: {_id: req.params.id, title: req.body.title}}).exec();
       const newNotification = {
         target: req.item._id,
         message: 'updated an item',
@@ -264,9 +250,9 @@ router.put(
         follower.notifs.push(notification);
         follower.save();
       }
-      for (const notifusers of req.item.chats) {
+      for (const notifusers of chats) {
         const notification = await Notification.create(newNotification);
-        const userx = await User.findById(notifusers.user2).exec();
+        const userx = await User.findById(notifusers.user1._id).exec();
         userx.notifs.push(notification);
         await userx.save();
       }
@@ -289,12 +275,13 @@ router.delete(
         message: 'deleted an item',
         isItem: true,
       };
-      for (const notifusers of req.item.chats) {
+      const chats = await Chat.find({item: {_id: req.params.id, title: req.item.title}}).exec();
+      for (const notifusers of chats) {
         const notification = await Notification.create(newNotification);
-        const userx = await User.findById(notifusers.user2).exec();
+        const userx = await User.findById(notifusers.user1._id).exec();
         userx.notifs.push(notification);
         await userx.save();
-        Chat.findOneAndRemove({_id: notifusers.id});
+        Chat.findOneAndRemove({_id: notifusers._id});
       }
       await req.item.remove();
       res.status(206).send('Deleted');
@@ -320,7 +307,8 @@ router.patch(
         req.item.buyer = user;
         req.item.buy_date = new Date(Date.now());
         req.item.status = 'INPROCESS';
-        for (const chat of req.item.chats) {
+        const chats = await Chat.find({item: {_id: req.params.id, title: req.item.title}}).exec();
+        for (const chat of chats) {
           chat.active = false;
           chat.save();
         }
@@ -356,7 +344,8 @@ router.patch(
         req.item.status = 'UNSOLD';
         req.item.buy_date = undefined;
         req.item.buyer = undefined;
-        for (let chat of req.item.chats) {
+        const chats = await Chat.find({item: {_id: req.params.id, title: req.item.title}}).exec();
+        for (let chat of chats) {
           chat.active = true;
           chat.save();
         }

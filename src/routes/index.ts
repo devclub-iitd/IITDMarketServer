@@ -57,6 +57,7 @@ router.post(
   passport.authenticate('local'),
   (req: express.Request, res: express.Response, next) => {
     globals = foo(req, res, next)
+    res.send(200);
   }
 );
 
@@ -64,7 +65,6 @@ router.post(
 router.get('/logout',async (req: express.Request, res: express.Response) => {
   try {
     req.logout();
-    await globals.changeStream.close();
     req.flash('success', 'See you later!');
     res.status(200).send('/item');
   } catch (err) {
@@ -150,7 +150,7 @@ router.get(
 
 router.get('/streamUser', (req: express.Request, res: express.Response) => {
   res.writeHead(200, {
-    'Connection': "keep-alive",
+    "Connection": "keep-alive",
     "Content-Type": "text/event-stream",
     "Cache-Control": "no-cache"
   })

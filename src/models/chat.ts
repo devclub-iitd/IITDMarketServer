@@ -1,33 +1,33 @@
 import mongoose from 'mongoose';
-import {MUser} from './user';
-import {MItem} from './item';
+import { MMessage } from './message';
 
 export interface MChat extends mongoose.Document {
-  user1: MUser;
-  user2: MUser;
-  item: MItem;
-  messages: string[];
+  user1: {username: string, _id: string};
+  user2: {username: string, _id: string};
+  item: {title: string, _id: string};
+  messages: MMessage[];
   active: boolean;
 }
 
 const chatSchema = new mongoose.Schema(
   {
     user1: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      username: String,
+      _id: String
     },
     user2: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      username: String,
+      _id: String
     },
     item: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Item',
+      title: String,
+      _id: String
     },
     messages: [
       {
-        type: String,
-      },
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Message',
+      }
     ],
     active: {
       type: Boolean,
