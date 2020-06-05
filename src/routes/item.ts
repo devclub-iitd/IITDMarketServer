@@ -168,7 +168,7 @@ router.post(
   async (req: express.Request, res: express.Response) => {
     try {
       // get data from form and add to courses array
-      const newItem: Record<string, any> = {
+      const newItem: Record<string, unknown> = {
         title: req.body.title,
         image: req.body.image,
         description: req.body.description,
