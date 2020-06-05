@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import {MUser} from './user';
-const voting = require('mongoose-voting');
+import voting = require('mongoose-voting');
 
 export interface MReview extends mongoose.Document {
   rating: number;

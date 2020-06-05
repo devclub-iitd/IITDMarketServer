@@ -43,7 +43,7 @@ router.put(
           {user2: {_id: req.params.id, username: user.username}},
         ],
       });
-      for (let chat of chats) {
+      for (const chat of chats) {
         await Message.remove({
           _id: {$in: chat.messages},
         });
@@ -60,25 +60,26 @@ router.put(
   }
 );
 
-router.put('/:id/ban/temp', middleware.isAdmin, async function (
-  req: express.Request,
-  res: express.Response
-) {
-  try {
-    const user = await User.findById(req.params.id).exec();
-    if (!user.isAdmin) {
-      user.banExpires = new Date(
-        Date.now() + 3600000 * 24 * Number(req.body.day)
-      );
+router.put(
+  '/:id/ban/temp',
+  middleware.isAdmin,
+  async (req: express.Request, res: express.Response) => {
+    try {
+      const user = await User.findById(req.params.id).exec();
+      if (!user.isAdmin) {
+        user.banExpires = new Date(
+          Date.now() + 3600000 * 24 * Number(req.body.day)
+        );
+      }
+      await user.save();
+      res.send('back');
+    } catch (err) {
+      console.log(err);
+      req.flash('error', err.message);
+      res.status(500).send('back');
     }
-    await user.save();
-    res.send('back');
-  } catch (err) {
-    console.log(err);
-    req.flash('error', err.message);
-    res.status(500).send('back');
   }
-});
+);
 
 router.put(
   '/:id',

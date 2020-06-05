@@ -17,9 +17,9 @@ const ioChat = io.of('/chat');
 let setRoom: (roomId: string) => void, gUsername: string;
 let gRoom: string;
 const sendUserStack = () => {
-  for (let i in userSocket) {
-    for (let j in userStack) {
-      if (j == i) {
+  for (const i in userSocket) {
+    for (const j in userStack) {
+      if (j === i) {
         userStack[j] = 'Online';
       }
     }
@@ -156,7 +156,7 @@ eventEmitter.on('getRoomData', data => {
     (err, result) => {
       if (err) {
         console.log(err);
-      } else if (result == undefined || result == null) {
+      } else if (result === undefined || result === null) {
         eventEmitter.emit('createNewChat', data);
       } else {
         setRoom(result._id);

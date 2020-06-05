@@ -1,5 +1,5 @@
 import path from 'path';
-import webpack from 'webpack';
+import webpack = require('webpack');
 
 const config: webpack.Configuration = {
   mode: 'production',
@@ -19,12 +19,10 @@ const config: webpack.Configuration = {
     ],
   },
   resolve: {
-    extensions: ['.ts', '.js', '.d.ts', '.tsx']
+    extensions: ['.ts', '.js', '.d.ts', '.tsx'],
   },
   target: 'node',
-  plugins: [
-    new webpack.ContextReplacementPlugin(/.*/)
-  ]
+  plugins: [new webpack.ContextReplacementPlugin(/.*/)],
 };
 
 export default config;

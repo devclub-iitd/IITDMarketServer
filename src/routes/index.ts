@@ -6,12 +6,12 @@ import Item from '../models/item';
 import Review from '../models/review';
 import '../models/notification';
 import middleware from '../middleware';
-import mongodb from 'mongodb';
+import mongodb from 'mongoose';
 
 const foo = function (
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction
+  req: express.Request
+  //res: express.Response,
+  //next: express.NextFunction
 ) {
   let _changeStream = User.watch([
     {$match: {'fullDocument._id': req.user._id}},
@@ -45,7 +45,7 @@ router.post(
         email: req.body.email,
         description: req.body.description,
       };
-      let newUser = new User(userobj);
+      const newUser = new User(userobj);
       if (req.body.adminCode === process.env.ADMIN_CODE) {
         newUser.isAdmin = true;
       }

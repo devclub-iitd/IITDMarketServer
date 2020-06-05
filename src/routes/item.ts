@@ -220,9 +220,9 @@ router.put(
   middleware.checkUserItem,
   async (req: express.Request, res: express.Response) => {
     try {
-      let nn = false;
+      //let nn = false;
       if (req.body.category !== req.item.category) {
-        nn = true;
+        //nn = true;
       }
       req.item.title = req.body.title;
       req.item.image = req.body.image;
@@ -353,7 +353,7 @@ router.patch(
         const chats = await Chat.find({
           item: {_id: req.params.id, title: req.item.title},
         }).exec();
-        for (let chat of chats) {
+        for (const chat of chats) {
           chat.active = true;
           chat.save();
         }
