@@ -11,22 +11,26 @@ import _ from 'lodash';
 
 const eventEmitter = new events.EventEmitter();
 const io = server(5000);
-const userStack: Record<any, any> = {};
-const userSocket: Record<any, any> = {};
+const userStack: Record<string, unknown> = {};
+const userSocket: Record<string, string> = {};
 const ioChat = io.of('/chat');
 let setRoom: (roomId: string) => void, gUsername: string;
 let gRoom: string;
 const sendUserStack = () => {
-  for (let i in userSocket) {
-    for (let j in userStack) {
-      if (j == i) {
+  for (const i in userSocket) {
+    for (const j in userStack) {
+      if (j === i) {
         userStack[j] = 'Online';
       }
     }
   }
   ioChat.emit('onlineStack', userStack);
 };
-const oldChats = (result: Record<any, any>, username: string, room: string) => {
+const oldChats = (
+  result: Record<string, unknown>,
+  username: string,
+  room: string
+) => {
   ioChat.to(userSocket[username]).emit('oldChats', {
     result: result,
     room: room,
@@ -156,7 +160,7 @@ eventEmitter.on('getRoomData', data => {
     (err, result) => {
       if (err) {
         console.log(err);
-      } else if (result == undefined || result == null) {
+      } else if (result === undefined || result === null) {
         eventEmitter.emit('createNewChat', data);
       } else {
         setRoom(result._id);

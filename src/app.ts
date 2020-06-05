@@ -23,6 +23,7 @@ import userReviewRoutes from './routes/userReview';
 import userRoutes from './routes/users';
 import moment from 'moment';
 import cors from 'cors';
+import './routes/chat';
 
 mongoose.set('useNewUrlParser', true);
 mongoose.set('useFindAndModify', false);

@@ -6,12 +6,12 @@ import Item from '../models/item';
 import Review from '../models/review';
 import '../models/notification';
 import middleware from '../middleware';
-import mongodb from 'mongodb';
+import {ChangeStream} from 'mongodb';
 
 const foo = function (
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction
+  req: express.Request
+  //res: express.Response,
+  //next: express.NextFunction
 ) {
   let _changeStream = User.watch([
     {$match: {'fullDocument._id': req.user._id}},
@@ -26,7 +26,7 @@ const foo = function (
   };
 };
 
-let globals: {changeStream: mongodb.ChangeStream<any>} = null;
+let globals: {changeStream: ChangeStream<unknown>} = null;
 
 //handle sign up logic
 router.post(
@@ -34,7 +34,7 @@ router.post(
   middleware.checkRegister,
   async (req: express.Request, res: express.Response) => {
     try {
-      const userobj: Record<string, any> = {
+      const userobj: Record<string, unknown> = {
         username: req.body.username,
         avatar: req.body.avatar,
         contact_number: req.body.contactNumber,
@@ -45,7 +45,7 @@ router.post(
         email: req.body.email,
         description: req.body.description,
       };
-      let newUser = new User(userobj);
+      const newUser = new User(userobj);
       if (req.body.adminCode === process.env.ADMIN_CODE) {
         newUser.isAdmin = true;
       }
@@ -61,8 +61,8 @@ router.post(
 router.post(
   '/login',
   passport.authenticate('local'),
-  (req: express.Request, res: express.Response, next) => {
-    globals = foo(req, res, next);
+  (req: express.Request, res: express.Response) => {
+    globals = foo(req);
     res.send(200);
   }
 );

@@ -66,7 +66,7 @@ const calculateAverage = (reviews: MReview[]) => {
   if (reviews.length === 0) {
     return 0;
   }
-  let sum: number = 0;
+  let sum = 0;
   reviews.forEach(element => {
     sum += element.rating;
   });

@@ -5,7 +5,7 @@ const config: webpack.Configuration = {
   mode: 'production',
   entry: './src/server.ts',
   output: {
-    path: path.resolve(__dirname, 'dist'),
+    path: path.resolve(__dirname, 'build'),
     filename: 'bundle.js',
     publicPath: '',
   },
@@ -19,12 +19,12 @@ const config: webpack.Configuration = {
     ],
   },
   resolve: {
-    extensions: ['.ts', '.js', '.d.ts', '.tsx']
+    extensions: ['.ts', '.js', '.d.ts', '.tsx'],
   },
   target: 'node',
-  plugins: [
-    new webpack.ContextReplacementPlugin(/.*/)
-  ]
+  externals: {
+    uws: 'uws',
+  },
 };
 
 export default config;

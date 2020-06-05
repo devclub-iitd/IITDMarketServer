@@ -2,11 +2,11 @@
   "extends": "./node_modules/gts/tsconfig-google.json",
   "compilerOptions": {
     "rootDir": ".",
-    "outDir": "dist",
+    "outDir": "build",
     "downlevelIteration": true,
     "esModuleInterop": true,
     "strictNullChecks": false,
-    "removeComments": true
+    "removeComments": true,
   },
   "include": [
     "src/**/*.ts",
