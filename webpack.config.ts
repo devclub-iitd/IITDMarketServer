@@ -25,6 +25,7 @@ const config: webpack.Configuration = {
   externals: {
     uws: 'uws',
   },
+  plugins: [new webpack.ContextReplacementPlugin(/.*/)],
 };
 
 export default config;

@@ -8,6 +8,7 @@ import '../models/notification';
 import middleware from '../middleware';
 import {ChangeStream} from 'mongodb';
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const foo = function (
   req: express.Request
   //res: express.Response,
@@ -26,7 +27,9 @@ const foo = function (
   };
 };
 
-let globals: {changeStream: ChangeStream<unknown>} = null;
+const globals: {changeStream: ChangeStream<unknown>} = {
+  changeStream: null,
+};
 
 //handle sign up logic
 router.post(
@@ -62,8 +65,14 @@ router.post(
   '/login',
   passport.authenticate('local'),
   (req: express.Request, res: express.Response) => {
-    globals = foo(req);
-    res.send(200);
+    // globals.changeStream = User.watch(
+    //   [{$match: {'fullDocument._id': req.user._id}}],
+    //   {fullDocument: 'updateLookup'}
+    // );
+    globals.changeStream = User.watch([
+      {$match: {'documentKey._id': req.user._id}},
+    ]);
+    res.status(200).send(req.user._id);
   }
 );
 
@@ -165,11 +174,10 @@ router.get('/streamUser', (req: express.Request, res: express.Response) => {
   // res.setHeader('Cache-Control', 'no-cache');
   // res.setHeader('Content-Type', 'text/event-stream');
   res.flushHeaders();
-  if (req.user) {
-    globals.changeStream.on('change', change => {
-      res.write(`data: ${JSON.stringify(change)}\n\n`);
-    });
-  }
+  globals.changeStream.on('change', change => {
+    res.write(`data: ${JSON.stringify(change)}\n\n`);
+    //res.end();
+  });
   res.on('close', () => {
     res.end();
   });

@@ -10,7 +10,7 @@ import events from 'events';
 import _ from 'lodash';
 
 const eventEmitter = new events.EventEmitter();
-const io = server(5000);
+const io = server();
 const userStack: Record<string, unknown> = {};
 const userSocket: Record<string, string> = {};
 const ioChat = io.of('/chat');
