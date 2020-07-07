@@ -1,6 +1,6 @@
 import Chat from '../models/chat';
 import User from '../models/user';
-import Message from '../models/message';
+import Message, {MMessage} from '../models/message';
 import server from 'socket.io';
 import events from 'events';
 import _ from 'lodash';
@@ -37,13 +37,25 @@ const socketIni = (http: http.Server) => {
     ioChat.emit('onlineStack', userStack);
   };
   const oldChats = (
-    result: Record<string, unknown>,
+    result: MMessage[],
     username: string,
     room: string,
     msgCount: number
   ) => {
     ioChat.to(userSocket[username]).emit('oldChats', {
-      result: result,
+      messages: result,
+      room: room,
+      msgCount,
+    });
+  };
+  const oldIniChats = (
+    result: Record<string, unknown>,
+    username: string,
+    room: string,
+    msgCount: number
+  ) => {
+    ioChat.to(userSocket[username]).emit('oldIniChats', {
+      chat: result,
       room: room,
       msgCount,
     });
@@ -55,7 +67,7 @@ const socketIni = (http: http.Server) => {
     msgCount: number
   ) => {
     ioChat.to(userSocket[username]).emit('newChat', {
-      result: result,
+      chat: result,
       room: room,
       msgCount,
     });
@@ -167,11 +179,17 @@ const socketIni = (http: http.Server) => {
           options: {
             limit: 20,
             skip: parseInt(data.msgCount),
+            sort: '-createdOn',
           },
         })
         .lean()
         .exec();
-      oldChats(result, data.username, data.room, parseInt(data.msgCount) + 20);
+      oldChats(
+        result.messages,
+        data.username,
+        data.room,
+        parseInt(data.msgCount) + 20
+      );
     } catch (err) {
       ioChat.to(userSocket[data.username]).emit('error', err.message);
     }
@@ -204,10 +222,13 @@ const socketIni = (http: http.Server) => {
         .populate({
           path: 'messages',
           match: {$and: [{to: data.user}, {unread: true}]},
+          options: {
+            sort: '-createdOn',
+          },
         })
         .lean()
         .exec();
-      oldChats(result, data.username, data.room, result.messages.length);
+      oldIniChats(result, data.username, data.room, result.messages.length);
     } catch (err) {
       ioChat.to(userSocket[data.username]).emit('error', err.message);
     }
@@ -256,7 +277,7 @@ const socketIni = (http: http.Server) => {
         .lean()
         .exec();
       setRoom(chat._id);
-      oldChats(result, data.from.username, chat._id, 1);
+      oldIniChats(result, data.from.username, chat._id, 1);
       if (userSocket[data.to.username]) {
         newChats(result, data.to.username, chat._id, 1);
       }
@@ -305,6 +326,7 @@ const socketIni = (http: http.Server) => {
         options: {
           limit: 20,
           skip: parseInt(data.msgCount),
+          sort: '-createdOn',
         },
       })
       .lean()
@@ -316,7 +338,7 @@ const socketIni = (http: http.Server) => {
         } else {
           setRoom(result._id);
           oldChats(
-            result,
+            result.messages,
             data.username,
             result._id,
             parseInt(data.msgCount) + 20
@@ -334,6 +356,13 @@ const socketIni = (http: http.Server) => {
       for (const message of chat.messages) {
         message.unread = false;
         message.save();
+        if (userSocket[message.from.username]) {
+          ioChat.to(userSocket[message.from.username]).emit('updateMsg', {
+            room: data.chatId,
+            messageId: message._id,
+            message,
+          });
+        }
       }
     } catch (err) {
       ioChat.to(userSocket[data.user.username]).emit('error', err.message);

@@ -52,7 +52,7 @@ router.get('/', async (req: express.Request, res: express.Response) => {
       }
       res.json({
         items: allItems,
-        current: pageNumber,
+        currentPage: pageNumber,
         pages: Math.ceil(count / perPage),
         noMatch: noMatch,
         search: req.query.search,
@@ -67,7 +67,7 @@ router.get('/', async (req: express.Request, res: express.Response) => {
       const count = await Item.countDocuments().exec();
       res.json({
         items: allItems,
-        current: pageNumber,
+        currentPage: pageNumber,
         pages: Math.ceil(count / perPage),
         noMatch: noMatch,
         search: false,
@@ -104,7 +104,7 @@ router.get(
         }
         res.json({
           items: allItems,
-          current: pageNumber,
+          currentPage: pageNumber,
           pages: Math.ceil(count / perPage),
           noMatch: noMatch,
           search: req.query.search,
@@ -121,7 +121,7 @@ router.get(
         }).exec();
         res.json({
           items: allItems,
-          current: pageNumber,
+          currentPage: pageNumber,
           pages: Math.ceil(count / perPage),
           noMatch: noMatch,
           search: false,
