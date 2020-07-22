@@ -116,6 +116,9 @@ const socketIni = (http: http.Server) => {
           ioChat.to(userSocket[socket.username]).emit('setRoom', socket.gRoom);
         };
       });
+      socket.on('updateMsg', data => {
+        eventEmitter.emit('updateMsg', data);
+      });
       // socket.on('oldChatsInit', data => {
       //   eventEmitter.emit('readChat', data);
       // });
@@ -355,7 +358,7 @@ const socketIni = (http: http.Server) => {
       });
       for (const message of chat.messages) {
         message.unread = false;
-        message.save();
+        await message.save();
         if (userSocket[message.from.username]) {
           ioChat.to(userSocket[message.from.username]).emit('updateMsg', {
             room: data.chatId,
@@ -366,6 +369,48 @@ const socketIni = (http: http.Server) => {
       }
     } catch (err) {
       ioChat.to(userSocket[data.user.username]).emit('error', err.message);
+    }
+  });
+
+  eventEmitter.on('updateMsg', async data => {
+    try {
+      const chat = await Chat.findById(data.room)
+        .populate({
+          path: 'messages',
+          match: {_id: data.message._id},
+        })
+        .exec();
+      for (const message of chat.messages) {
+        message.message = data.message.message;
+        message.unread = true;
+        await message.save();
+        if (userSocket[message.from.username]) {
+          ioChat.to(userSocket[message.from.username]).emit('updateMsg', {
+            room: data.room,
+            messageId: message._id,
+            message,
+          });
+        }
+        if (userSocket[message.to.username]) {
+          ioChat.to(userSocket[message.to.username]).emit('updateMsg', {
+            room: data.room,
+            messageId: message._id,
+            message,
+          });
+        }
+      }
+      await chat.save();
+    } catch (err) {
+      if (userSocket[data.message.from.username]) {
+        ioChat
+          .to(userSocket[data.message.from.username])
+          .emit('error', err.message);
+      }
+      if (userSocket[data.message.to.username]) {
+        ioChat
+          .to(userSocket[data.message.to.username])
+          .emit('error', err.message);
+      }
     }
   });
   return io;

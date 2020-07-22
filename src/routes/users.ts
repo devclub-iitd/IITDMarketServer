@@ -15,9 +15,6 @@ router.get('/:id', async (req: express.Request, res: express.Response) => {
       .populate('reviews')
       .exec();
     const foundItem = await Item.find({seller: foundUser}).exec();
-    if (req.user || !req.user.id.equals(req.params.id)) {
-      await foundUser.depopulate('chats').execPopulate();
-    }
     res.json({user: foundUser, item: foundItem});
   } catch (err) {
     res.status(500).send(err.message);

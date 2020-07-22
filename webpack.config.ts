@@ -1,5 +1,6 @@
 import path from 'path';
 import webpack from 'webpack';
+import nodeExternals from 'webpack-node-externals';
 
 const config: webpack.Configuration = {
   mode: 'production',
@@ -22,10 +23,7 @@ const config: webpack.Configuration = {
     extensions: ['.ts', '.js', '.d.ts', '.tsx'],
   },
   target: 'node',
-  externals: {
-    uws: 'uws',
-  },
-  plugins: [new webpack.ContextReplacementPlugin(/.*/)],
+  externals: [nodeExternals()],
 };
 
 export default config;

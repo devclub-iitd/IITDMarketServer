@@ -1,0 +1,1 @@
+mongod --port 27017 --replSet rs0 --dbpath \data\db --bind_ip localhost
