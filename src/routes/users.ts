@@ -9,17 +9,37 @@ import '../models/notification';
 import middleware from '../middleware';
 
 //User Profile
-router.get('/:id', async (req: express.Request, res: express.Response) => {
+router.get('/:id/own', async (req: express.Request, res: express.Response) => {
   try {
     const foundUser = await User.findById(req.params.id)
       .populate('reviews')
       .exec();
     const foundItem = await Item.find({seller: foundUser}).exec();
-    res.json({user: foundUser, item: foundItem});
+    const itemSold = await Item.find({
+      $and: [
+        {$or: [{status: 'INPROCESS'}, {status: 'SOLD'}]},
+        {$or: [{seller: foundUser}, {buyer: foundUser}]},
+      ],
+    }).exec();
+    res.json({user: foundUser, item: foundItem, transactions: itemSold});
   } catch (err) {
     res.status(500).send(err.message);
   }
 });
+
+router.get(
+  '/:id/others',
+  async (req: express.Request, res: express.Response) => {
+    try {
+      const foundUser = await User.findById(req.params.id)
+        .populate('reviews')
+        .exec();
+      res.json(foundUser);
+    } catch (err) {
+      res.status(500).send(err.message);
+    }
+  }
+);
 
 router.put(
   '/:id/ban',
@@ -29,23 +49,24 @@ router.put(
       const user = await User.findById(req.params.id).exec();
       if (!user.isAdmin) {
         user.isBanned = true;
-      }
-      user.folCategory = [];
-      const chats = await Chat.find({
-        $or: [
-          {user1: {_id: req.params.id, username: user.username}},
-          {user2: {_id: req.params.id, username: user.username}},
-        ],
-      });
-      for (const chat of chats) {
-        await Message.remove({
-          _id: {$in: chat.messages},
+        user.folCategory = [];
+        const chats = await Chat.find({
+          $or: [
+            {user1: {_id: req.params.id, username: user.username}},
+            {user2: {_id: req.params.id, username: user.username}},
+          ],
         });
-        chat.remove();
+        for (const chat of chats) {
+          await Message.remove({
+            _id: {$in: chat.messages},
+          });
+          chat.remove();
+        }
+        await Item.remove({seller: user._id}).exec();
+        await user.save();
+        res.send(true);
       }
-      await Item.remove({seller: user._id}).exec();
-      await user.save();
-      res.send();
+      res.send(false);
     } catch (err) {
       res.status(500).send(err.message);
     }
@@ -62,9 +83,10 @@ router.put(
         user.banExpires = new Date(
           Date.now() + 3600000 * 24 * Number(req.body.day)
         );
+        await user.save();
+        res.send(true);
       }
-      await user.save();
-      res.send();
+      res.send(false);
     } catch (err) {
       res.status(500).send(err.message);
     }

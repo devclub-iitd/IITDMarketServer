@@ -8,6 +8,7 @@ export interface MItem extends mongoose.Document {
   price: number;
   seller: MUser;
   buyer: MUser;
+  hostel: string;
   category: string;
   tag: string;
   buy_date: Date;
@@ -48,9 +49,35 @@ const itemSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
     },
+    hostel: {
+      type: String,
+      enum: [
+        'KAILASH',
+        'HIMADRI',
+        'KUMAON',
+        'JWALAMUKHI',
+        'ARAVALI',
+        'KARAKORAM',
+        'NILGIRI',
+        'VINDHYACHAL',
+        'SHIVALIK',
+        'ZANSKAR',
+        'SATPURA',
+        'GIRNAR',
+        'UDAIGIRI',
+      ],
+    },
     category: {
       type: String,
-      enum: ['GENERAL', 'COOLER', 'LAPTOP', 'CYCLE', 'MATTRESS'],
+      enum: [
+        'GENERAL',
+        'COOLER',
+        'LAPTOP',
+        'CYCLE',
+        'MATTRESS',
+        'PHONE',
+        'BOOKS',
+      ],
       trim: true,
       default: 'GENERAL',
     },

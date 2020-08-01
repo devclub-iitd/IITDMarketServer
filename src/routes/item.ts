@@ -133,6 +133,15 @@ router.get(
   }
 );
 
+router.get('/hostel/:h', (req: express.Request, res: express.Response) => {
+  Item.find({hostel: req.params.h}, (err, items) => {
+    if (err) {
+      res.status(500).send(err.message);
+    }
+    res.json(items);
+  });
+});
+
 // //INDEX - show all courses
 // router.get("/", function(req, res){
 //   if(req.query.search && req.xhr) {

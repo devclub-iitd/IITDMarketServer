@@ -54,7 +54,7 @@ router.post(
       }
       const user = await User.register(newUser, req.body.password);
       req.login(user, () => {});
-      res.status(200).send(user);
+      res.status(200).send(req.user);
     } catch (err) {
       res.status(500).send(err.message);
     }
