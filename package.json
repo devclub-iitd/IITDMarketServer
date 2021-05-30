@@ -56,7 +56,7 @@
     "typescript": "^3.9.3",
     "utf-8-validate": "^5.0.2",
     "webpack-cli": "^3.3.11",
-    "ws": "^7.3.0"
+    "ws": "^7.4.6"
   },
   "dependencies": {
     "@types/connect-flash": "0.0.35",
