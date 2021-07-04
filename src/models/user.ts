@@ -32,7 +32,24 @@ const UserSchema = new mongoose.Schema(
     avatar: String,
     contact_number: String,
     entry_number: String,
-    hostel: String,
+    hostel: {
+      type: String,
+      enum: [
+        'KAILASH',
+        'HIMADRI',
+        'KUMAON',
+        'JWALAMUKHI',
+        'ARAVALI',
+        'KARAKORAM',
+        'NILGIRI',
+        'VINDHYACHAL',
+        'SHIVALIK',
+        'ZANSKAR',
+        'SATPURA',
+        'GIRNAR',
+        'UDAIGIRI',
+      ],
+    },
     chatPersons: [
       {
         username: String,
@@ -65,6 +82,8 @@ const UserSchema = new mongoose.Schema(
     folCategory: [
       {
         type: String,
+        enum: ['GENERAL', 'COOLER', 'LAPTOP', 'CYCLE', 'MATTRESS'],
+        trim: true,
       },
     ],
   },

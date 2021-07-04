@@ -8,25 +8,28 @@ import '../models/notification';
 import middleware from '../middleware';
 import {ChangeStream} from 'mongodb';
 
-const foo = function (
-  req: express.Request
-  //res: express.Response,
-  //next: express.NextFunction
-) {
-  let _changeStream = User.watch([
-    {$match: {'fullDocument._id': req.user._id}},
-  ]);
-  return {
-    get changeStream() {
-      return _changeStream;
-    },
-    set changeStream(val) {
-      _changeStream = val;
-    },
-  };
-};
+// // eslint-disable-next-line @typescript-eslint/no-unused-vars
+// const foo = function (
+//   req: express.Request
+//   //res: express.Response,
+//   //next: express.NextFunction
+// ) {
+//   let _changeStream = User.watch([
+//     {$match: {'fullDocument._id': req.user._id}},
+//   ]);
+//   return {
+//     get changeStream() {
+//       return _changeStream;
+//     },
+//     set changeStream(val) {
+//       _changeStream = val;
+//     },
+//   };
+// };
 
-let globals: {changeStream: ChangeStream<unknown>} = null;
+const globals: {changeStream: ChangeStream<unknown>} = {
+  changeStream: null,
+};
 
 //handle sign up logic
 router.post(
@@ -49,8 +52,9 @@ router.post(
       if (req.body.adminCode === process.env.ADMIN_CODE) {
         newUser.isAdmin = true;
       }
-      await User.register(newUser, req.body.password);
-      res.status(200).send('/register');
+      const user = await User.register(newUser, req.body.password);
+      req.login(user, () => {});
+      res.status(200).send(req.user);
     } catch (err) {
       res.status(500).send(err.message);
     }
@@ -62,8 +66,14 @@ router.post(
   '/login',
   passport.authenticate('local'),
   (req: express.Request, res: express.Response) => {
-    globals = foo(req);
-    res.send(200);
+    // globals.changeStream = User.watch(
+    //   [{$match: {'fullDocument._id': req.user._id}}],
+    //   {fullDocument: 'updateLookup'}
+    // );
+    globals.changeStream = User.watch([
+      {$match: {'documentKey._id': req.user._id}},
+    ]);
+    res.status(200).send(req.user);
   }
 );
 
@@ -71,8 +81,7 @@ router.post(
 router.get('/logout', async (req: express.Request, res: express.Response) => {
   try {
     req.logout();
-    req.flash('success', 'See you later!');
-    res.status(200).send('/item');
+    res.status(200).send('Logged Out');
   } catch (err) {
     res.status(500).send(err.message);
   }
@@ -86,14 +95,12 @@ router.patch(
     try {
       console.log(req.user);
       const user = await User.findById(req.user._id).exec();
-      user.folCategory.push(req.params.slug);
+      user.folCategory = [...new Set(user.folCategory.concat(req.params.slug))];
       await user.save();
       req.login(user, () => {});
-      req.flash('success', 'Successfully followed ' + req.params.id + '!');
-      res.status(200).send('/users/' + req.user._id);
+      res.status(200);
     } catch (err) {
-      req.flash('error', err.message);
-      res.status(500).send('back');
+      res.status(500).send(err.message);
     }
   }
 );
@@ -110,11 +117,9 @@ router.patch(
       );
       await user.save();
       req.login(user, () => {});
-      req.flash('success', 'Successfully followed ' + req.params.id + '!');
-      res.status(200).send('/users/' + req.user._id);
+      res.status(200);
     } catch (err) {
-      req.flash('error', err.message);
-      res.status(500).send('back');
+      res.status(500).send(err.message);
     }
   }
 );
@@ -134,8 +139,7 @@ router.get(
       const allNotifications = user.notifs;
       res.json(allNotifications);
     } catch (err) {
-      req.flash('error', err.message);
-      res.status(500).send('back');
+      res.status(500).send(err.message);
     }
   }
 );
@@ -149,14 +153,12 @@ router.get(
       const reviews = await Review.find({isReported: true}).exec();
       res.json({items, reviews});
     } catch (err) {
-      console.log(err);
-      req.flash('error', err.message);
-      res.status(500).send('back');
+      res.status(500).send(err.message);
     }
   }
 );
 
-router.get('/streamUser', (req: express.Request, res: express.Response) => {
+router.get('/streamUser', (_req: express.Request, res: express.Response) => {
   res.writeHead(200, {
     Connection: 'keep-alive',
     'Content-Type': 'text/event-stream',
@@ -165,11 +167,10 @@ router.get('/streamUser', (req: express.Request, res: express.Response) => {
   // res.setHeader('Cache-Control', 'no-cache');
   // res.setHeader('Content-Type', 'text/event-stream');
   res.flushHeaders();
-  if (req.user) {
-    globals.changeStream.on('change', change => {
-      res.write(`data: ${JSON.stringify(change)}\n\n`);
-    });
-  }
+  globals.changeStream.on('change', change => {
+    res.write(`data: ${JSON.stringify(change)}\n\n`);
+    //res.end();
+  });
   res.on('close', () => {
     res.end();
   });

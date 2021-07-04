@@ -7,25 +7,39 @@ import Message from '../models/message';
 import '../models/review';
 import '../models/notification';
 import middleware from '../middleware';
-import {error} from 'console';
 
 //User Profile
-router.get('/:id', async (req: express.Request, res: express.Response) => {
+router.get('/:id/own', async (req: express.Request, res: express.Response) => {
   try {
     const foundUser = await User.findById(req.params.id)
       .populate('reviews')
       .exec();
-    const foundItem = await Item.find({
-      $and: [{seller: foundUser}, {userIsAnonymous: true}],
+    const foundItem = await Item.find({seller: foundUser}).exec();
+    const itemSold = await Item.find({
+      $and: [
+        {$or: [{status: 'INPROCESS'}, {status: 'SOLD'}]},
+        {$or: [{seller: foundUser}, {buyer: foundUser}]},
+      ],
     }).exec();
-    if (req.user || req.user.id !== req.params.id) {
-      await foundUser.depopulate('chats').execPopulate();
-    }
-    res.json({user: foundUser, item: foundItem});
+    res.json({user: foundUser, item: foundItem, transactions: itemSold});
   } catch (err) {
     res.status(500).send(err.message);
   }
 });
+
+router.get(
+  '/:id/others',
+  async (req: express.Request, res: express.Response) => {
+    try {
+      const foundUser = await User.findById(req.params.id)
+        .populate('reviews')
+        .exec();
+      res.json(foundUser);
+    } catch (err) {
+      res.status(500).send(err.message);
+    }
+  }
+);
 
 router.put(
   '/:id/ban',
@@ -35,27 +49,26 @@ router.put(
       const user = await User.findById(req.params.id).exec();
       if (!user.isAdmin) {
         user.isBanned = true;
-      }
-      user.folCategory = [];
-      const chats = await Chat.find({
-        $or: [
-          {user1: {_id: req.params.id, username: user.username}},
-          {user2: {_id: req.params.id, username: user.username}},
-        ],
-      });
-      for (const chat of chats) {
-        await Message.remove({
-          _id: {$in: chat.messages},
+        user.folCategory = [];
+        const chats = await Chat.find({
+          $or: [
+            {user1: {_id: req.params.id, username: user.username}},
+            {user2: {_id: req.params.id, username: user.username}},
+          ],
         });
-        chat.remove();
+        for (const chat of chats) {
+          await Message.remove({
+            _id: {$in: chat.messages},
+          });
+          chat.remove();
+        }
+        await Item.remove({seller: user._id}).exec();
+        await user.save();
+        res.send(true);
       }
-      await Item.remove({seller: user._id}).exec();
-      await user.save();
-      res.send();
+      res.send(false);
     } catch (err) {
-      console.log(err);
-      req.flash('error', err.message);
-      res.status(500).send('back');
+      res.status(500).send(err.message);
     }
   }
 );
@@ -70,13 +83,12 @@ router.put(
         user.banExpires = new Date(
           Date.now() + 3600000 * 24 * Number(req.body.day)
         );
+        await user.save();
+        res.send(true);
       }
-      await user.save();
-      res.send('back');
+      res.send(false);
     } catch (err) {
-      console.log(err);
-      req.flash('error', err.message);
-      res.status(500).send('back');
+      res.status(500).send(err.message);
     }
   }
 );
@@ -87,8 +99,9 @@ router.put(
   async (req: express.Request, res: express.Response) => {
     try {
       const user = await User.findById(req.params.id).exec();
-      if (req.user._id !== user._id || req.user.isAdmin) {
-        throw error('invalid user');
+      if (!user._id.equals(req.user._id) || !req.user.isAdmin) {
+        console.log(req.user._id !== user._id, req.user._id, user._id);
+        throw new Error('invalid user');
       }
       user.avatar = req.body.avatar;
       user.contact_number = req.body.contactNumber;
@@ -102,9 +115,7 @@ router.put(
       req.login(user, () => {});
       res.send('Done');
     } catch (err) {
-      console.log(err);
-      req.flash('error', err.message);
-      res.status(500).send('back');
+      res.status(500).send(err.message);
     }
   }
 );

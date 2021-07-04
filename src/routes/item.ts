@@ -52,7 +52,7 @@ router.get('/', async (req: express.Request, res: express.Response) => {
       }
       res.json({
         items: allItems,
-        current: pageNumber,
+        currentPage: pageNumber,
         pages: Math.ceil(count / perPage),
         noMatch: noMatch,
         search: req.query.search,
@@ -67,7 +67,7 @@ router.get('/', async (req: express.Request, res: express.Response) => {
       const count = await Item.countDocuments().exec();
       res.json({
         items: allItems,
-        current: pageNumber,
+        currentPage: pageNumber,
         pages: Math.ceil(count / perPage),
         noMatch: noMatch,
         search: false,
@@ -104,7 +104,7 @@ router.get(
         }
         res.json({
           items: allItems,
-          current: pageNumber,
+          currentPage: pageNumber,
           pages: Math.ceil(count / perPage),
           noMatch: noMatch,
           search: req.query.search,
@@ -121,7 +121,7 @@ router.get(
         }).exec();
         res.json({
           items: allItems,
-          current: pageNumber,
+          currentPage: pageNumber,
           pages: Math.ceil(count / perPage),
           noMatch: noMatch,
           search: false,
@@ -132,6 +132,15 @@ router.get(
     }
   }
 );
+
+router.get('/hostel/:h', (req: express.Request, res: express.Response) => {
+  Item.find({hostel: req.params.h}, (err, items) => {
+    if (err) {
+      res.status(500).send(err.message);
+    }
+    res.json(items);
+  });
+});
 
 // //INDEX - show all courses
 // router.get("/", function(req, res){
@@ -175,7 +184,7 @@ router.post(
         seller: req.user,
         price: req.body.price,
         tag: req.body.tag,
-        userIsAnonymous: req.body.anonymous,
+        userIsAnonymous: Boolean(req.body.anonymous),
         category: req.body.category,
         ApproxTime: {
           month: req.body.month,
@@ -186,7 +195,8 @@ router.post(
       const users = await User.find({folCategory: item.category}).exec();
       const newNotification = {
         target: item._id,
-        message: 'Another item came for you in which u may be interested',
+        message:
+          'A new item has been added in the category of your interest. Hurry up and checkout the item details before the item is sold',
         isItem: true,
       };
       // Socket !!
@@ -195,7 +205,7 @@ router.post(
         follower.notifs.push(notification);
         follower.save();
       }
-      res.redirect('/item');
+      res.json(item);
     } catch (err) {
       res.status(500).send(err.message);
     }
@@ -220,17 +230,13 @@ router.put(
   middleware.checkUserItem,
   async (req: express.Request, res: express.Response) => {
     try {
-      //let nn = false;
-      if (req.body.category !== req.item.category) {
-        //nn = true;
-      }
       req.item.title = req.body.title;
       req.item.image = req.body.image;
       req.item.description = req.body.description;
       req.item.seller = req.user;
       req.item.price = req.body.price;
       req.item.tag = req.body.tag;
-      req.item.userIsAnonymous = req.body.anonymous;
+      req.item.userIsAnonymous = Boolean(req.body.anonymous);
       req.item.category = req.body.category;
       req.item.ApproxTime = {
         month: req.body.month,
@@ -243,7 +249,7 @@ router.put(
       }).exec();
       const newNotification = {
         target: req.item._id,
-        message: 'updated an item',
+        message: 'Item details are updated successfully',
         isItem: true,
       };
       // Socket !!
@@ -258,7 +264,7 @@ router.put(
         userx.notifs.push(notification);
         await userx.save();
       }
-      res.send('Done');
+      res.send(req.item);
     } catch (err) {
       res.send(500).send(err.message);
     }
@@ -274,7 +280,7 @@ router.delete(
     try {
       const newNotification = {
         target: req.item._id,
-        message: 'deleted an item',
+        message: 'The item has been deleted successfully',
         isItem: true,
       };
       const chats = await Chat.find({
@@ -288,7 +294,7 @@ router.delete(
         Chat.findOneAndRemove({_id: notifusers._id});
       }
       await req.item.remove();
-      res.status(206).send('Deleted');
+      res.status(200).send('Deleted');
     } catch (err) {
       res.status(500).send(err.message);
     }
@@ -305,7 +311,6 @@ router.patch(
         $or: [{_id: req.body.id}, {email: req.body.email}],
       }).exec();
       if (!user) {
-        req.flash('error', 'No user found');
         res.send(300);
       } else {
         req.item.buyer = user;
@@ -320,15 +325,14 @@ router.patch(
         }
         const newNotification = {
           target: req.item._id,
-          message: 'deleted an item',
+          message: '$$ISN',
           isItem: true,
         };
         const notification = await Notification.create(newNotification);
         user.notifs.push(notification);
         await user.save();
         await req.item.save();
-        req.flash('success', 'jhgd');
-        res.send('done');
+        res.status(200).send(req.item);
       }
     } catch (err) {
       res.status(500).send(err.message);
@@ -357,18 +361,36 @@ router.patch(
           chat.active = true;
           chat.save();
         }
+        let notif = 'The item has been rejected by the buyer';
+        if (req.body.accept) {
+          notif = 'The item has been marked sold by the buyer';
+        }
         const newNotification = {
           target: req.item._id,
-          message: 'deleted an item',
+          message: notif,
           isItem: true,
         };
         const notification = await Notification.create(newNotification);
         req.item.seller.notifs.push(notification);
         await req.item.seller.save();
         await req.item.save();
-        req.flash('success', 'jhgd');
-        res.send('done');
+        res.status(200).send(req.item);
       }
+    } catch (err) {
+      res.status(500).send(err.message);
+    }
+  }
+);
+
+router.patch(
+  '/:id/resolve',
+  middleware.isLoggedIn,
+  async (req: express.Request, res: express.Response) => {
+    try {
+      const item = await Item.findById(req.params.id).exec();
+      item.isReported = false;
+      await item.save();
+      res.send('OK');
     } catch (err) {
       res.status(500).send(err.message);
     }
@@ -383,12 +405,9 @@ router.patch(
       const item = await Item.findById(req.params.id).exec();
       item.isReported = true;
       await item.save();
-      req.flash('success', 'Item reported!');
-      res.send('/item/' + req.params.id);
+      res.send('OK');
     } catch (err) {
-      console.log(err);
-      req.flash('error', err.message);
-      res.send('/');
+      res.status(500).send(err.message);
     }
   }
 );

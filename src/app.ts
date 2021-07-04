@@ -7,7 +7,6 @@ import mongoose from 'mongoose';
 import passport from 'passport';
 import cookieParser from 'cookie-parser';
 import psLocal from 'passport-local';
-import flash from 'connect-flash';
 import './models/item';
 import User from './models/user';
 import session from 'express-session';
@@ -23,7 +22,6 @@ import userReviewRoutes from './routes/userReview';
 import userRoutes from './routes/users';
 import moment from 'moment';
 import cors from 'cors';
-import './routes/chat';
 
 mongoose.set('useNewUrlParser', true);
 mongoose.set('useFindAndModify', false);
@@ -33,8 +31,8 @@ mongoose.set('useUnifiedTopology', true);
 // assign mongoose promise library and connect to database
 mongoose.Promise = global.Promise;
 
-const databaseUri = process.env.MONGODB_URI || 'mongodb://localhost/iitd';
-
+const databaseUri =
+  process.env.MONGODB_URI || 'mongodb://localhost:27017/iitd?replicaSet=rs0';
 mongoose
   .connect(databaseUri)
   .then(() => console.log('Database connected'))
@@ -60,37 +58,11 @@ app.use(
   })
 );
 
-app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
 passport.use(new LocalStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
-
-app.use(
-  async (
-    req: express.Request,
-    res: express.Response,
-    next: express.NextFunction
-  ) => {
-    res.locals.currentUser = req.user;
-    if (req.user) {
-      try {
-        const changeStream = await User.watch([{$match: {}}]);
-        changeStream.on('change', change => console.log(change));
-        const user = await User.findById(req.user._id)
-          .populate('notifs', null, {isRead: false})
-          .exec();
-        res.locals.notifications = user.notifs.reverse();
-      } catch (err) {
-        console.log(err.message);
-      }
-    }
-    res.locals.success = req.flash('success');
-    res.locals.error = req.flash('error');
-    next();
-  }
-);
 
 app.use('/', indexRoutes);
 app.use('/item', itemRoutes);
