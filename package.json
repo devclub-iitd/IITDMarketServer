@@ -50,7 +50,7 @@
     "concurrently": "^5.2.0",
     "gts": "^2.0.2",
     "minimist": "^1.2.5",
-    "mongodb-client-encryption": "^1.0.1",
+    "mongodb-client-encryption": "^1.2.6",
     "nodemon": "^2.0.4",
     "ts-loader": "^7.0.5",
     "ts-node": "^8.10.2",
