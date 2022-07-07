@@ -80,7 +80,7 @@
     "lodash": "^4.17.15",
     "lusca": "^1.6.1",
     "method-override": "^3.0.0",
-    "moment": "^2.26.0",
+    "moment": "^2.29.4",
     "mongoose": "^5.9.16",
     "mongoose-voting": "^0.3.0",
     "passport": "^0.4.1",
